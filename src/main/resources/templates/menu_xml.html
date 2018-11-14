@@ -1,0 +1,39 @@
+<menu todayMenu="${menu.isTodayMenu}" xmlns:th="http://www.thymeleaf.org">
+    <date millis="${menu.timestamp}" th:text="${menu.itLocaleDateText}"></date>
+    <menuUrl th:text="${menu.url}"></menuUrl>
+    <firstCourses>
+        <course th:each="course : ${menu.firstCourses}">
+            <name th:text="${course.name}"></name>
+            <ingredients th:each="ingredient : ${course.ingredients}">
+                [[${ingredient}]]
+            </ingredients>
+        </course>
+    </firstCourses>
+    <secondCourses>
+        <course th:each="course : ${menu.secondCourses}">
+            <name th:text="${course.name}"></name>
+            <ingredients th:each="ingredient : ${course.ingredients}">
+                [[${ingredient}]]
+            </ingredients>
+        </course>
+    </secondCourses>
+    <sideCourses>
+        <course th:each="course : ${menu.sideCourses}">
+            <name th:text="${course.name}"></name>
+            <ingredients th:each="ingredient : ${course.ingredients}">
+                [[${ingredient}]]
+            </ingredients>
+        </course>
+    </sideCourses>
+    <fruitCourse>
+        $if(menu.fruitCourse)$$course(menu.fruitCourse);separator="\n"$$endif$
+    </fruitCourse>
+    <takeAwayBasket>
+        <course th:object="${menu.takeAwayBasketContent}">
+            <name th:text="*{name}"></name>
+            <ingredients th:each="ingredient : *{ingredients}">
+                [[${ingredient}]]
+            </ingredients>
+        </course>
+    </takeAwayBasket>
+</menu>
