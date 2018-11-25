@@ -10,9 +10,11 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
+
 import org.springframework.http.MediaType;
 
 import static org.springframework.web.reactive.function.BodyInserters.fromObject;
+
 import org.springframework.web.reactive.result.view.Rendering;
 
 @Component
@@ -33,16 +35,17 @@ public class MenuHandler {
 
     public Mono<ServerResponse> getXmlMenu(ServerRequest request) {
         try {
-            return Rendering.view("menu_xml")
-                    .modelAttribute("menu", menuRepository.retrieve())
-                    
+            return
+//                    Rendering.view("menu_xml")
+//                    .modelAttribute("menu", menuRepository.retrieve());
+
                     ServerResponse.ok()
-                    .contentType(MediaType.TEXT_XML)
-                    .render("menu_xml", new HashMap<String, Menu>() {
-                        {
-                            put("menu", menuRepository.retrieve());
-                        }
-                    });
+                            .contentType(MediaType.TEXT_XML)
+                            .render("menu_xml", new HashMap<String, Menu>() {
+                                {
+                                    put("menu", menuRepository.retrieve());
+                                }
+                            });
         } catch (Exception ex) {
             return Mono.error(ex);
         }
