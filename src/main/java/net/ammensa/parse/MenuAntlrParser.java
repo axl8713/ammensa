@@ -6,8 +6,7 @@ import net.ammensa.exception.MenuParseException;
 import net.ammensa.parse.antlr.CourseExtractorVisitor;
 import net.ammensa.parse.antlr.CourseGrammarLexer;
 import net.ammensa.parse.antlr.CourseGrammarParser;
-import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.*;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -239,7 +238,7 @@ public class MenuAntlrParser {
 
     private Course parseCourse(String courseString) {
 
-        ANTLRInputStream input = new ANTLRInputStream(courseString);
+        CharStream input = CharStreams.fromString(courseString);
         CourseGrammarLexer lexer = new CourseGrammarLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         CourseGrammarParser parser = new CourseGrammarParser(tokens);

@@ -23,5 +23,5 @@ content		: TEXT (NL TEXT)* ;
 SEP	:	'ç' ; 				
 NL    : '\r'? '\n' ;
 WS		: [ ]+ -> skip ;
-TEXT  : ~[\r\n\(\)]+ ;
+TEXT  : ~[\r\n()]+ ;
 
