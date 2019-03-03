@@ -1,5 +1,5 @@
-<menu todayMenu="${menu.isTodayMenu}" xmlns:th="http://www.thymeleaf.org">
-    <date millis="${menu.timestamp}" th:text="${menu.itLocaleDateText}"></date>
+<menu th:attr="todayMenu=${menu.todayMenu}" xmlns:th="http://www.thymeleaf.org">
+    <date th:attr="millis=${menu.timestamp}" th:text="${menu.itLocaleDateText}"></date>
     <menuUrl th:text="${menu.url}"></menuUrl>
     <firstCourses>
         <course th:each="course : ${menu.firstCourses}">
