@@ -26,7 +26,9 @@
         </course>
     </sideCourses>
     <fruitCourse>
-        $if(menu.fruitCourse)$$course(menu.fruitCourse);separator="\n"$$endif$
+        <course th:each="course : ${menu.fruitCourse}">
+            <name th:text="${course.name}"></name>
+        </course>
     </fruitCourse>
     <takeAwayBasket>
         <course th:object="${menu.takeAwayBasketContent}">

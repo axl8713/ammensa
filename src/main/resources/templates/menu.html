@@ -1,12 +1,66 @@
 <!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
 
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>MENU!</title>
+    <title>AMMensa - menu del giorno mensa ADISURC Salerno</title>
 </head>
-<body>
-<p>Today is: <span th:text="${menu.timestamp}">13 february 2011</span>.</p>
+<body style="font: 10pt 'Verdana'; width: 73%; margin-left: auto; margin-right: auto; background-color: #FFE5B4;">
+<div id="content" style="text-align: center; padding: 10px;">
+    <div id="menu" style="text-align: left;">
+        <h1>
+            Menu del giorno
+            <span th:text="${menu.itLocaleDateText}"></span>
+        </h1>
+        <a th:href="${menu.url}" th:text="${menu.url}"></a>
+        <h2>Primi</h2>
+        <ul th:each="course : ${menu.firstCourses}" style="margin-top: 10px; list-style-type: square; font-size: 12pt;">
+            <li>
+                <span th:text="${course.name}" style="margin-top: 10px;"></span>
+                <ul th:each="ingredient : ${course.ingredients}">
+                    <li th:text="${ingredient}"></li>
+                </ul>
+            </li>
+        </ul>
+        <h2>Secondi</h2>
+        <ul th:each="course : ${menu.secondCourses}"
+            style="margin-top: 10px; list-style-type: square; font-size: 12pt;">
+            <li>
+                <span th:text="${course.name}" style="margin-top: 10px;"></span>
+                <ul th:each="ingredient : ${course.ingredients}">
+                    <li th:text="${ingredient}"></li>
+                </ul>
+            </li>
+        </ul>
+        <h2>Contorni</h2>
+        <ul th:each="course : ${menu.sideCourses}" style="margin-top: 10px; list-style-type: square; font-size: 12pt;">
+            <li>
+                <span th:text="${course.name}" style="margin-top: 10px;"></span>
+                <ul th:each="ingredient : ${course.ingredients}">
+                    <li th:text="${ingredient}"></li>
+                </ul>
+            </li>
+        </ul>
+        <h2>Frutta</h2>
+        <ul th:each="course : ${menu.fruitCourse}" style="margin-top: 10px; list-style-type: square; font-size: 12pt;">
+            <li>
+                <span th:text="${course.name}" style="margin-top: 10px;"></span>
+                <ul th:each="ingredient : ${course.ingredients}">
+                    <li th:text="${ingredient}"></li>
+                </ul>
+            </li>
+        </ul>
+        <h2>Cestino</h2>
+        <ul th:each="course : ${menu.takeAwayBasketContent}"
+            style="margin-top: 10px; list-style-type: square; font-size: 12pt;">
+            <li>
+                <span style="margin-top: 10px;">Contenuto/Content</span>
+                <ul th:each="ingredient : ${course.ingredients}">
+                    <li th:text="${ingredient}"></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</div>
 </body>
 </html>
