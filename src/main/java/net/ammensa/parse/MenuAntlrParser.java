@@ -6,12 +6,18 @@ import net.ammensa.exception.MenuParseException;
 import net.ammensa.parse.antlr.CourseExtractorVisitor;
 import net.ammensa.parse.antlr.CourseGrammarLexer;
 import net.ammensa.parse.antlr.CourseGrammarParser;
-import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,15 +27,40 @@ public class MenuAntlrParser {
 
     private static final Logger log = Logger.getLogger("debug");
     private static final String MENU_TXT_HEADER_SAMPLE = "MENU' - PRANZO";
-    private static final String MENU_REGEX_HEADER_END = "\\s*" + "[a-zA-Z]+(?:'|Ì)?\\s+\\d{1,2}\\s+\\w+\\s+\\d+\\s+"
+    public static final String MENU_ITALIAN_DATE = "[a-zA-Z]+['Ì]?\\s+\\d{1,2}\\s+\\w+\\s+\\d+";
+    private static final String MENU_REGEX_HEADER_END = "\\s*" + "(?<italianDate>" + MENU_ITALIAN_DATE + ")\\s+"
             + "[a-zA-Z]+\\s+\\d{1,2}\\s+\\w+\\s+\\d+" + "\\s+";
     private static final String MENU_TXT_ADISU_RECOMMENDATION_SAMPLE = "A.DI.SU.";
     private static final String MENU_REGEX_ADISU_RECOMMENDATION_END = "mediterranean diet." + "\\s+";
     private static final String MENU_REGEX_ADDITIONAL_INGREDIENT = "(?s)(?:\\n\\(\\d\\*\\))(.*?)(?=\\n\\(\\d\\*\\)|\\n\\s*\\B)";
+    private static final DateTimeFormatter MENU_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("EE dd MMMM y", Locale.ITALY);
 
     public Menu parseMenu(String menuText) throws MenuParseException {
 
         try {
+            Menu menu = new Menu();
+
+            menuText = cleanMenuText(menuText);
+
+            Pattern pattern = Pattern.compile(MENU_REGEX_HEADER_END);
+
+            Matcher matcher = pattern.matcher(menuText);
+
+            if (matcher.find()) {
+
+                String italianDate = matcher.group("italianDate");
+
+                String[] split = italianDate.split("\\s+");
+
+                split[0] = split[0].substring(0, 3);
+
+                LocalDate menuLocalDate = LocalDate.parse(String.join(" ", split).toLowerCase(), MENU_DATE_TIME_FORMATTER);
+
+                log.info("Date of the menu: " + menuLocalDate);
+
+                menu.setTimestamp(menuLocalDate.atStartOfDay().atZone(ZoneId.of("Europe/Rome")).toInstant().toEpochMilli());
+            }
+
 
             menuText = menuTextCleanup(menuText);
 
@@ -46,8 +77,6 @@ public class MenuAntlrParser {
             List<Course> dailyCoursesList = findDailyCourses(menuText);
 
             log.info("parsing complete!");
-
-            Menu menu = new Menu();
 
             List<Course> firstCourses = new ArrayList<>();
             List<Course> secondCourses = new ArrayList<>();
@@ -79,7 +108,6 @@ public class MenuAntlrParser {
     }
 
     private String menuTextCleanup(String menuText) {
-        menuText = cleanMenuText(menuText);
         menuText = removeMenuHeaders(menuText);
         menuText = removeMenuFooters(menuText);
         menuText = removeAdditionalIngredients(menuText);
@@ -220,7 +248,7 @@ public class MenuAntlrParser {
     }
 
     private String[] splitDailyCoursesFromMenuText(String menu) {
-        return menu.split("\\)\\s*(?=\\w|\\*)");
+        return menu.split("\\)\\s{2,}(?=\\w|\\*)");
     }
 
     private Course parseDailyCourse(String courseString) {
