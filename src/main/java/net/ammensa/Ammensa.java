@@ -1,4 +1,4 @@
-package net.ammensa.main;
+package net.ammensa;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

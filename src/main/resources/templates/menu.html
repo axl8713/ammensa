@@ -1,16 +1,19 @@
-<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" lang="it">
 <head>
-    <meta charset="UTF-8">
-    <title>AMMensa - menu del giorno mensa ADISURC Salerno</title>
+    <meta charset="UTF-8"/>
+    <title>AMMensa &#x2013; menu del giorno mensa ADISURC Salerno</title>
 </head>
 <body style="font: 10pt 'Verdana'; width: 73%; margin-left: auto; margin-right: auto; background-color: #FFE5B4;">
 <div id="content" style="text-align: center; padding: 10px;">
-    <div id="menu" style="text-align: left;">
+    <div id="info" style="text-align: left;">
+        <div id="status">
+            <h2 id="message" th:text="${status.message}"></h2>
+        </div>
+    </div>
+    <div th:if="${menu!=null}" id="menu" style="text-align: left;">
         <h1>
-            Menu del giorno
-            <span th:text="${menu.itLocaleDateText}"></span>
+            Menu del giorno &#x2013; <span th:text="${menu.itLocaleDateText}"></span>
         </h1>
         <a th:href="${menu.url}" th:text="${menu.url}"></a>
         <h2>Primi</h2>

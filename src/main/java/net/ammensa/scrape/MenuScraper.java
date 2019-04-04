@@ -4,8 +4,9 @@ import net.ammensa.property.AMMensaProperties;
 import org.jsoup.Connection.Response;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
+
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,7 +22,7 @@ public class MenuScraper {
 
         try {
 
-            String scrapedMenuUrl = AMMensaProperties.retrieveProperty("adisuHostUrl") + "/" + scrapeMenuPdfRelativeUrlJsoup();
+            String scrapedMenuUrl = scrapeMenuPdfRelativeUrlJsoup();
 
             LOGGER.info("scraped menu's URL: " + scrapedMenuUrl);
 
@@ -37,9 +38,13 @@ public class MenuScraper {
         Response response = Jsoup.connect(AMMensaProperties.retrieveProperty("menuPageUrl")).timeout(0).execute();
         Document document = response.parse();
 
-        Element aMenuPranzo = document.getElementsByAttributeValue("title", "[application/pdf]").get(0);
+        Elements aMenuPranzo = document.getElementsMatchingOwnText("Pranzo");
 
-        return aMenuPranzo.attr("href");
+        if (aMenuPranzo.isEmpty()) {
+            throw new Exception("no pdf in page");
+        }
+
+        return aMenuPranzo.get(0).attr("href");
     }
 
     public static void findUrl(byte[] menuPageHtmlBytes) {

@@ -9,9 +9,9 @@ public abstract class AMMensaProperties {
 
 	static {
 		propertiesMap.put("datastoreMenuKey", "todayMenu");
-		propertiesMap.put("adisuHostUrl", "http://www.adisu.sa.it");
+		propertiesMap.put("adisuHostUrl", "https://www.adisurcampania.it");
 		propertiesMap.put("menuPageUrl", propertiesMap.get("adisuHostUrl")
-				+ "/4/servizi-adisu/ristorazione/menu-del-giorno.html");
+				+ "/archivio2_aree-tematiche_0_8.html");
 		propertiesMap.put("menuPdfFolderPath", "fileadmin/user_upload/menu/");
 	}
 

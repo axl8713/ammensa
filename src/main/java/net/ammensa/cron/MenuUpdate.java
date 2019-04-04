@@ -7,25 +7,16 @@ import net.ammensa.scrape.MenuScraper;
 import net.ammensa.utils.HttpDownload;
 import net.ammensa.utils.PdfUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Component
 public class MenuUpdate {
 
     private static final Logger LOGGER = Logger.getLogger(MenuUpdate.class.getName());
-
-    private static final Pattern MENU_DATE_IN_URL_PATTERN = Pattern.compile("(\\d{1,2})[_]+(\\w+?)[_]+(\\d+)");
 
     @Autowired
     private MenuScraper menuScraper;
@@ -33,9 +24,16 @@ public class MenuUpdate {
     private MenuAntlrParser menuParser;
     @Autowired
     private MenuRepository menuRepository;
+    @Autowired
+    private HttpDownload httpDownload;
 
-    //    @Scheduled(fixedRate = 500000)
-    public void updateMenu() throws Exception {
+    @Scheduled(cron = "0 */10 10-12 * * 1-5", zone = "Europe/Rome")
+    public void refreshMenu() {
+        httpDownload.download("https://ammensa.herokuapp.com/update").subscribe((a) -> LOGGER.info("refresh"));
+    }
+
+
+    public Mono<Object> updateMenu() throws Exception {
 
         LOGGER.info("update");
 
@@ -43,35 +41,24 @@ public class MenuUpdate {
 
         LOGGER.info(menuUrl);
 
-        byte[] menuBytes = HttpDownload.download(menuUrl);
-        String menuString = PdfUtils.convertPdfToString(menuBytes);
+        Mono<byte[]> monoMenuBytes = httpDownload.download(menuUrl);
 
-        Menu menu = menuParser.parseMenu(menuString);
+        return monoMenuBytes.map(m -> {
 
-        long scrapedMenuDateMillis = composeDateFromMenuUrl(menuUrl);
+            try {
+                String menuString = PdfUtils.convertPdfToString(m);
 
-        LOGGER.log(Level.INFO, "{0}", scrapedMenuDateMillis);
+                Menu menu = menuParser.parseMenu(menuString);
 
-        menu.setTimestamp(scrapedMenuDateMillis);
-        menu.setUrl(menuUrl);
+                menu.setUrl(menuUrl);
+                menuRepository.save(menu);
 
-        menuRepository.save(menu);
-    }
+                return Mono.empty();
 
-    private long composeDateFromMenuUrl(String menuUrl) throws ParseException {
 
-        Matcher dateInUrlMatcher = MENU_DATE_IN_URL_PATTERN.matcher(menuUrl);
-        dateInUrlMatcher.find();
-
-        Calendar menuCalendar = Calendar.getInstance(TimeZone.getTimeZone("Europe/Rome"), Locale.ITALY);
-
-        Date month = new SimpleDateFormat("MMM", Locale.ITALY).parse(dateInUrlMatcher.group(2));
-
-        /* setting menu month first due parsing of the month name */
-        menuCalendar.setTime(month);
-        menuCalendar.set(Calendar.DAY_OF_MONTH, Integer.parseInt(dateInUrlMatcher.group(1)));
-        menuCalendar.set(Calendar.YEAR, Integer.parseInt(dateInUrlMatcher.group(3)));
-
-        return menuCalendar.getTimeInMillis();
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        });
     }
 }

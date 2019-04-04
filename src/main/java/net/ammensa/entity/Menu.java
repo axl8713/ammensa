@@ -1,10 +1,5 @@
 package net.ammensa.entity;
 
-import org.dizitart.no2.objects.Id;
-import org.stringtemplate.v4.ST;
-import org.stringtemplate.v4.STGroup;
-import org.stringtemplate.v4.STGroupFile;
-
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.util.*;
@@ -18,7 +13,6 @@ public class Menu implements Serializable {
     public final static int SECOND_COURSES_NUM = DAILY_SECOND_COURSES_NUM + 3;
     public final static int SIDE_COURSES_NUM = DAILY_SIDE_COURSES_NUM + 1;
 
-    @Id
     private long timestamp;
     private String url;
     private List<Course> firstCourses;
@@ -65,7 +59,7 @@ public class Menu implements Serializable {
         return takeAwayBasketContent;
     }
 
-    public boolean isIsTodayMenu() {
+    public boolean isTodayMenu() {
         return isTodayMenu;
     }
 
@@ -75,7 +69,6 @@ public class Menu implements Serializable {
 
     /**
      * Has the side effect of setting <code>isTodayMenu</code> field.
-     *
      */
     public void setTimestamp(long millis) {
         Calendar now = Calendar.getInstance(TimeZone.getTimeZone("Europe/Rome"), Locale.ITALY);
@@ -113,7 +106,7 @@ public class Menu implements Serializable {
 
     private void setITLocaleDateText(Date date) {
 
-        DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT, Locale.ITALY);
+        DateFormat df = DateFormat.getDateInstance(DateFormat.FULL, Locale.ITALY);
         df.setCalendar(Calendar.getInstance(TimeZone.getTimeZone("Europe/Rome"), Locale.ITALY));
         this.itLocaleDateText = df.format(date);
     }
@@ -133,18 +126,6 @@ public class Menu implements Serializable {
             }
         }
         return courseString;
-    }
-
-    public String toXml() {
-        StringBuilder result = new StringBuilder();
-        STGroup group = new STGroupFile("templates/menuXMLTemplate.stg", '$', '$');
-
-        ST st = group.getInstanceOf("menu");
-        st.add("m", this);
-
-        result.append(st.render());
-
-        return result.toString();
     }
 
     @Override
@@ -175,5 +156,4 @@ public class Menu implements Serializable {
 
         return menuStringBuilder.toString();
     }
-
 }

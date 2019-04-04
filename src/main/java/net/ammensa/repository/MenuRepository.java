@@ -7,6 +7,7 @@ import org.dizitart.no2.objects.ObjectFilter;
 import org.dizitart.no2.objects.ObjectRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.logging.Logger;
 
 @Repository
@@ -26,15 +27,17 @@ public class MenuRepository {
         nitriteRepository.insert(menu);
     }
 
-    public Menu retrieve() {
+    public Optional<Menu> retrieve() {
+
+        LOGGER.info("repo retrieve");
 
         Cursor<Menu> cursor = nitriteRepository.find();
 
         if (cursor.size() == 0) {
-            return new Menu();
+            return Optional.empty();
         }
 
-        return cursor.iterator().next();
+        return Optional.of(cursor.iterator().next());
     }
 
     public void delete() {
