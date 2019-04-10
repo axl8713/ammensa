@@ -1,6 +1,6 @@
 package net.ammensa.configuration;
 
-import net.ammensa.flux.handler.MenuHandler;
+import net.ammensa.handler.MenuHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.server.RouterFunction;

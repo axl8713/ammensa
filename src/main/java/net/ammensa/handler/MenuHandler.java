@@ -1,5 +1,7 @@
-package net.ammensa.flux.handler;
+package net.ammensa.handler;
 
+import ch.gadp.holidays.Holiday;
+import ch.gadp.holidays.Holidays;
 import net.ammensa.cron.MenuUpdate;
 import net.ammensa.entity.Menu;
 import net.ammensa.entity.MenuStatus;
@@ -14,9 +16,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Logger;
 
 import static org.springframework.web.reactive.function.BodyInserters.fromObject;
@@ -25,44 +25,67 @@ import static org.springframework.web.reactive.function.BodyInserters.fromObject
 public class MenuHandler {
 
     private static final Logger LOGGER = Logger.getLogger(MenuHandler.class.getName());
+    private static final MonthDay SAN_MATTEO = MonthDay.of(Month.SEPTEMBER, 21);
+    private static Clock ITALY_CLOCK = Clock.system(ZoneId.of("Europe/Rome"));
 
     @Autowired
     private MenuUpdate menuUpdate;
     @Autowired
     private MenuRepository menuRepository;
 
-    private static Clock italyClock = Clock.system(ZoneId.of("Europe/Rome"));
 
     public Mono<ServerResponse> serveMenu(ServerRequest request) {
+        try {
 
-        ZonedDateTime now = ZonedDateTime.now(italyClock);
+            ZonedDateTime now = ZonedDateTime.now(ITALY_CLOCK);
 
-        LOGGER.info("the time right now is " + now);
+            LOGGER.info("the time right now is " + now);
 
-        int hour = now.getHour();
-//hour=12;
+            if (isMensaClosed(now)) {
+                return handleMessageResponse(request, MenuStatus.MENSA_CLOSED);
+            }
 
-        return Mono.fromCallable(menuRepository::retrieve)
-                .flatMap(optionalMenu -> optionalMenu
-                        .map(menu -> {
+            int hour = now.getHour();
 
-                            LocalDate menuDate = ZonedDateTime.ofInstant(Instant.ofEpochMilli(menu.getTimestamp()), italyClock.getZone()).toLocalDate();
+            return Mono.fromCallable(menuRepository::retrieve)
+                    .flatMap(optionalMenu -> optionalMenu
+                            .map(menu -> {
 
-                            if (!menuDate.isEqual(now.toLocalDate())) {
+                                LocalDate menuDate = ZonedDateTime.ofInstant(Instant.ofEpochMilli(menu.getTimestamp()), ITALY_CLOCK.getZone()).toLocalDate();
 
-                                LOGGER.info("old menu in repository");
+                                if (!menuDate.isEqual(now.toLocalDate())) {
 
-                                menuRepository.delete();
+                                    LOGGER.info("old menu in repository");
 
+                                    menuRepository.delete();
+
+                                    return handleNotAvailableResponse(request, hour);
+                                }
+
+                                return handleMenuResponse(request, menu);
+                            })
+                            .orElseGet(() -> {
+                                LOGGER.info("no menu in repository");
                                 return handleNotAvailableResponse(request, hour);
-                            }
+                            }));
+        } catch (Exception ex) {
+            return handleMessageResponse(request, MenuStatus.ERROR);
+        }
+    }
 
-                            return handleMenuResponse(request, menu);
-                        })
-                        .orElseGet(() -> {
-                            LOGGER.info("no menu in repository");
-                            return handleNotAvailableResponse(request, hour);
-                        }));
+    private boolean isMensaClosed(ZonedDateTime now) {
+        try {
+            DayOfWeek todaysDayOfWeek = now.getDayOfWeek();
+            List<Holiday> todaysHolidays = new Holidays().on(Date.from(now.toInstant()), Arrays.asList("it"), Holidays.NO_OPTION);
+
+            return todaysDayOfWeek.equals(DayOfWeek.SATURDAY) || todaysDayOfWeek.equals(DayOfWeek.SUNDAY)
+                    || !todaysHolidays.isEmpty()
+                    || SAN_MATTEO.equals(MonthDay.of(now.getMonth(), now.getDayOfMonth()));
+
+        } catch (Exception ex) {
+            LOGGER.severe("error checking mensa closing");
+            throw new RuntimeException(ex);
+        }
     }
 
     private Mono<ServerResponse> handleNotAvailableResponse(ServerRequest request, int finalhour) {
@@ -91,7 +114,7 @@ public class MenuHandler {
                 .withMenu(menu);
 
         if (requestAcceptHeader.contains(MediaType.TEXT_HTML)) {
-            ZonedDateTime tomorrowMidnight = LocalDate.now(italyClock.getZone()).atStartOfDay(italyClock.getZone()).plusDays(1);
+            ZonedDateTime tomorrowMidnight = LocalDate.now(ITALY_CLOCK.getZone()).atStartOfDay(ITALY_CLOCK.getZone()).plusDays(1);
             responseBuilder.withExpires(tomorrowMidnight);
         }
 
@@ -173,7 +196,6 @@ public class MenuHandler {
 
     public Mono<ServerResponse> manualMenuUpdate(ServerRequest request) {
         try {
-
             menuRepository.delete();
 
             return retrieveMenu()
