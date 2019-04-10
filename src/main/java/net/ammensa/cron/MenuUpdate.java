@@ -39,8 +39,6 @@ public class MenuUpdate {
 
         String menuUrl = menuScraper.scrapePdfMenuUrl();
 
-        LOGGER.info(menuUrl);
-
         Mono<byte[]> monoMenuBytes = httpDownload.download(menuUrl);
 
         return monoMenuBytes.map(m -> {
@@ -54,7 +52,6 @@ public class MenuUpdate {
                 menuRepository.save(menu);
 
                 return Mono.empty();
-
 
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
