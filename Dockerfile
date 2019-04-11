@@ -1,4 +1,7 @@
 FROM openjdk:11-jre-slim
 VOLUME /tmp
-COPY target/ammensa-*.jar ammensa.jar
-CMD ["java","-Djava.security.egd=file:/dev/./urandom","-Xss512k","-Xmx256M","-XX:+UseContainerSupport","-jar","/ammensa.jar"]
+ARG DEPENDENCY=target/dependency
+COPY ${DEPENDENCY}/BOOT-INF/lib /app/lib
+COPY ${DEPENDENCY}/META-INF /app/META-INF
+COPY ${DEPENDENCY}/BOOT-INF/classes /app
+CMD ["java","-Xss512k","-Xmx256M","-XX:+UseContainerSupport","-cp","app:app/lib/*","net.ammensa.Ammensa"]
