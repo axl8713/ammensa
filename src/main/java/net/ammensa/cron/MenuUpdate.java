@@ -7,6 +7,7 @@ import net.ammensa.scrape.MenuScraper;
 import net.ammensa.utils.HttpDownload;
 import net.ammensa.utils.PdfUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -26,10 +27,13 @@ public class MenuUpdate {
     private MenuRepository menuRepository;
     @Autowired
     private HttpDownload httpDownload;
+    @Value("${server.port}")
+    private int serverPort;
 
     @Scheduled(cron = "0 */10 10-12 * * 1-5", zone = "Europe/Rome")
     public void refreshMenu() {
-        httpDownload.download("https://ammensa.herokuapp.com/update").subscribe((a) -> LOGGER.info("refresh"));
+        LOGGER.info("starting cron refresh");
+        httpDownload.download("localhost:" + serverPort + "/update").subscribe((a) -> LOGGER.info("cron refresh complete"));
     }
 
 
