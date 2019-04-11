@@ -51,7 +51,10 @@ public class ServeMenuIT {
     @Test
     public void xmlMenu() throws Exception {
 
-        /* TODO: usare un webserver di test */
+        /* TODO:
+            - usare un webserver di test
+            - evitare di fare lo scrape della pagina adisu
+        */
         byte[] menuBytes = Files.readAllBytes(new ClassPathResource("menu/MERCOLEDI' 20 FEBBRAIO 2019 PRANZO.pdf").getFile().toPath());
         Mono<byte[]> monoMenuBytes = Mono.just(menuBytes);
         Mockito.when(httpDownloadMock.download(Mockito.any())).thenReturn(monoMenuBytes);
@@ -73,7 +76,10 @@ public class ServeMenuIT {
     @Test
     public void htmlMenu() throws Exception {
 
-        /* TODO: usare un webserver di test */
+       /* TODO:
+            - usare un webserver di test
+            - evitare di fare lo scrape della pagina adisu
+        */
         byte[] menuBytes = Files.readAllBytes(new ClassPathResource("menu/MERCOLEDI' 20 FEBBRAIO 2019 PRANZO.pdf").getFile().toPath());
         Mono<byte[]> monoMenuBytes = Mono.just(menuBytes);
         Mockito.when(httpDownloadMock.download(Mockito.any())).thenReturn(monoMenuBytes);
@@ -212,7 +218,10 @@ public class ServeMenuIT {
     @Test
     public void oldMenuBeforeNoon() throws Exception {
 
-        /* TODO: usare un webserver di test */
+        /* TODO:
+            - usare un webserver di test
+            - evitare di fare lo scrape della pagina adisu
+        */
         byte[] menuBytes = Files.readAllBytes(new ClassPathResource("menu/MERCOLEDI' 20 FEBBRAIO 2019 PRANZO.pdf").getFile().toPath());
         Mono<byte[]> monoMenuBytes = Mono.just(menuBytes);
         Mockito.when(httpDownloadMock.download(Mockito.any())).thenReturn(monoMenuBytes);
@@ -236,7 +245,10 @@ public class ServeMenuIT {
     @Test
     public void oldMenuAfterNoon() throws Exception {
 
-        /* TODO: usare un webserver di test */
+        /* TODO:
+            - usare un webserver di test
+            - evitare di fare lo scrape della pagina adisu
+        */
         byte[] menuBytes = Files.readAllBytes(new ClassPathResource("menu/MERCOLEDI' 20 FEBBRAIO 2019 PRANZO.pdf").getFile().toPath());
         Mono<byte[]> monoMenuBytes = Mono.just(menuBytes);
         Mockito.when(httpDownloadMock.download(Mockito.any())).thenReturn(monoMenuBytes);

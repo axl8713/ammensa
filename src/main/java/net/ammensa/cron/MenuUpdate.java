@@ -52,6 +52,8 @@ public class MenuUpdate {
 
                 Menu menu = menuParser.parseMenu(menuString);
 
+                /* TODO: evitare di salvare il menu se è vecchio */
+
                 menu.setUrl(menuUrl);
                 menuRepository.save(menu);
 
