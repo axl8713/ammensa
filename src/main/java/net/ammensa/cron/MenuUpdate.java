@@ -7,7 +7,6 @@ import net.ammensa.scrape.MenuScraper;
 import net.ammensa.utils.HttpDownload;
 import net.ammensa.utils.PdfUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -27,41 +26,44 @@ public class MenuUpdate {
     private MenuRepository menuRepository;
     @Autowired
     private HttpDownload httpDownload;
-    @Value("${server.port}")
-    private int serverPort;
 
     @Scheduled(cron = "0 */10 10-12 * * 1-5", zone = "Europe/Rome")
     public void refreshMenu() {
         LOGGER.info("starting cron refresh");
-        httpDownload.download("localhost:" + serverPort + "/update").subscribe((a) -> LOGGER.info("cron refresh complete"));
+        updateMenu().subscribe((a) -> LOGGER.info("cron refresh complete"));
     }
 
 
-    public Mono<Object> updateMenu() throws Exception {
+    public Mono<Object> updateMenu() {
+        try {
 
-        LOGGER.info("update");
+            LOGGER.info("update");
 
-        String menuUrl = menuScraper.scrapePdfMenuUrl();
+            menuRepository.delete();
 
-        Mono<byte[]> monoMenuBytes = httpDownload.download(menuUrl);
+            String menuUrl = menuScraper.scrapePdfMenuUrl();
 
-        return monoMenuBytes.map(m -> {
+            Mono<byte[]> monoMenuBytes = httpDownload.download(menuUrl);
 
-            try {
-                String menuString = PdfUtils.convertPdfToString(m);
+            return monoMenuBytes.map(m -> {
+                try {
+                    String menuString = PdfUtils.convertPdfToString(m);
 
-                Menu menu = menuParser.parseMenu(menuString);
+                    Menu menu = menuParser.parseMenu(menuString);
 
-                /* TODO: evitare di salvare il menu se è vecchio */
+                    /* TODO: evitare di salvare il menu se è vecchio */
 
-                menu.setUrl(menuUrl);
-                menuRepository.save(menu);
+                    menu.setUrl(menuUrl);
+                    menuRepository.save(menu);
 
-                return Mono.empty();
+                    return Mono.empty();
 
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
-        });
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            });
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }

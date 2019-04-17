@@ -16,13 +16,7 @@ public class RoutingConfiguration {
     @Bean
     public RouterFunction<ServerResponse> menuRouterFunction(MenuHandler menuHandler) {
         return RouterFunctions
-                .route(GET("/"), request -> {
-                    try {
-                        return menuHandler.serveMenu(request);
-                    } catch (Exception ex) {
-                        throw new RuntimeException(ex);
-                    }
-                })
+                .route(GET("/"), menuHandler::serveMenu)
                 .andRoute(path("/update"), menuHandler::manualMenuUpdate);
     }
 }

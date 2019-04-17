@@ -129,7 +129,6 @@ public class MenuHandler {
         private MenuStatus menuStatus;
         private ZonedDateTime expires;
 
-
         private ResponseBuilder(List<MediaType> requestAccept, MenuStatus menuStatus) {
             this.contentType = negotiateContentType(requestAccept);
             this.menuStatus = menuStatus;
@@ -195,29 +194,18 @@ public class MenuHandler {
 
 
     public Mono<ServerResponse> manualMenuUpdate(ServerRequest request) {
-        try {
-            menuRepository.delete();
-
-            return retrieveMenu()
-                    .flatMap(m -> ServerResponse.ok().body(fromObject(m)))
-                    .switchIfEmpty(ServerResponse.notFound().build());
-
-        } catch (Exception ex) {
-            return Mono.error(ex);
-        }
+        return retrieveMenu()
+                .flatMap(m -> ServerResponse.ok().body(fromObject(m)))
+                .switchIfEmpty(ServerResponse.notFound().build());
     }
 
     private Mono<Menu> retrieveMenu() {
-        try {
-            LOGGER.info("retrieve");
-            Mono<Object> objectMono = menuUpdate.updateMenu();
-            return Mono
-                    .when(objectMono)
-                    .then(Mono.fromCallable(menuRepository::retrieve)
-                            /* https://stackoverflow.com/a/53188485/1291616 */
-                            .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty)));
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
+        LOGGER.info("retrieve");
+        Mono<Object> objectMono = menuUpdate.updateMenu();
+        return Mono
+                .when(objectMono)
+                .then(Mono.fromCallable(menuRepository::retrieve)
+                        /* https://stackoverflow.com/a/53188485/1291616 */
+                        .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty)));
     }
 }

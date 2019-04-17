@@ -13,10 +13,6 @@ public class ApplicationStartMenuUpdater implements ApplicationListener<Applicat
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {
-        try {
-            menuHandler.updateMenu().subscribe();
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
+        menuHandler.updateMenu().subscribe();
     }
 }
