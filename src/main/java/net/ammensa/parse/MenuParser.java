@@ -23,7 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Component
-public class MenuAntlrParser {
+public class MenuParser {
 
     private static final Logger log = Logger.getLogger("debug");
     private static final String MENU_TXT_HEADER_SAMPLE = "MENU' - PRANZO";

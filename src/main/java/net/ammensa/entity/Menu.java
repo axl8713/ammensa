@@ -68,6 +68,7 @@ public class Menu implements Serializable {
     }
 
     /**
+     * TODO: refactor to use java.time
      * Has the side effect of setting <code>isTodayMenu</code> field.
      */
     public void setTimestamp(long millis) {

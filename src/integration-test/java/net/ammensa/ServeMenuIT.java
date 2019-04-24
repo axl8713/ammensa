@@ -3,7 +3,7 @@ package net.ammensa;
 import net.ammensa.cron.MenuUpdate;
 import net.ammensa.entity.MenuStatus;
 import net.ammensa.handler.MenuHandler;
-import net.ammensa.parse.MenuAntlrParser;
+import net.ammensa.parse.MenuParser;
 import net.ammensa.repository.MenuRepository;
 import net.ammensa.utils.HttpDownload;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +33,7 @@ public class ServeMenuIT {
     @Autowired
     private MenuUpdate menuUpdate;
     @Autowired
-    private MenuAntlrParser menuAntlrParser;
+    private MenuParser menuParser;
     @Autowired
     private MenuRepository menuRepository;
     @Autowired
@@ -62,6 +62,7 @@ public class ServeMenuIT {
 
         Clock fixed = Clock.fixed(LocalDateTime.parse("2019-02-20T12:12:12").atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
         ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
+        ReflectionTestUtils.setField(menuUpdate, "ITALY_CLOCK", fixed);
 
         menuUpdate.updateMenu().subscribe((a) -> {
             testClient
@@ -87,6 +88,7 @@ public class ServeMenuIT {
 
         Clock fixed = Clock.fixed(LocalDateTime.parse("2019-02-20T22:22:22").atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
         ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
+        ReflectionTestUtils.setField(menuUpdate, "ITALY_CLOCK", fixed);
 
         menuUpdate.updateMenu().subscribe((a) -> {
             testClient

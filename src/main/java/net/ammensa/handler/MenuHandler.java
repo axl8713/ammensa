@@ -92,12 +92,12 @@ public class MenuHandler {
         }
     }
 
-    private Mono<ServerResponse> handleNotAvailableResponse(ServerRequest request, int finalhour) {
-        if (finalhour < 9) {
+    private Mono<ServerResponse> handleNotAvailableResponse(ServerRequest request, int hour) {
+        if (hour < 9) {
             return handleMessageResponse(request, MenuStatus.TOO_EARLY);
-        } else if (finalhour < 10) {
+        } else if (hour < 10) {
             return handleMessageResponse(request, MenuStatus.TOO_EARLY_ANYWAY);
-        } else if (finalhour > 12) {
+        } else if (hour > 12) {
             return handleMessageResponse(request, MenuStatus.STILL_NOT_AVAILABLE);
         } else {
             return handleMessageResponse(request, MenuStatus.NOT_AVAILABLE);
