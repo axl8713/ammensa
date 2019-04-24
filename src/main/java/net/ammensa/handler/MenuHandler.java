@@ -16,7 +16,10 @@ import reactor.core.publisher.Mono;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Logger;
 
 import static org.springframework.web.reactive.function.BodyInserters.fromObject;
@@ -26,6 +29,7 @@ public class MenuHandler {
 
     private static final Logger LOGGER = Logger.getLogger(MenuHandler.class.getName());
     private static final MonthDay SAN_MATTEO = MonthDay.of(Month.SEPTEMBER, 21);
+    private static final List<String> IT_HOLIDAYS_REGION = Collections.singletonList("it");
     private static Clock ITALY_CLOCK = Clock.system(ZoneId.of("Europe/Rome"));
 
     @Autowired
@@ -76,7 +80,7 @@ public class MenuHandler {
     private boolean isMensaClosed(ZonedDateTime now) {
         try {
             DayOfWeek todaysDayOfWeek = now.getDayOfWeek();
-            List<Holiday> todaysHolidays = new Holidays().on(Date.from(now.toInstant()), Arrays.asList("it"), Holidays.NO_OPTION);
+            List<Holiday> todaysHolidays = new Holidays(IT_HOLIDAYS_REGION).on(Date.from(now.toInstant()), IT_HOLIDAYS_REGION, Holidays.NO_OPTION);
 
             return todaysDayOfWeek.equals(DayOfWeek.SATURDAY) || todaysDayOfWeek.equals(DayOfWeek.SUNDAY)
                     || !todaysHolidays.isEmpty()
@@ -182,7 +186,7 @@ public class MenuHandler {
                 return response.body(fromObject(body));
 
             } else {
-                return response.render(templateName, new HashMap<>() {
+                return response.render(templateName, new HashMap<String, Object>() {
                     {
                         put("status", menuStatus);
                         put("menu", menu);
