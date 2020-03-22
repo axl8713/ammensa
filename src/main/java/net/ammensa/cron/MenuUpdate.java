@@ -20,7 +20,6 @@ public class MenuUpdate {
     private static final Logger LOGGER = Logger.getLogger(MenuUpdate.class.getName());
     private static Clock ITALY_CLOCK = Clock.system(ZoneId.of("Europe/Rome"));
 
-
     @Autowired
     private MenuScraper menuScraper;
     @Autowired
@@ -37,7 +36,6 @@ public class MenuUpdate {
         LOGGER.info("starting cron refresh");
         updateMenu().subscribe((a) -> LOGGER.info("cron refresh complete"));
     }
-
 
     public Mono<Object> updateMenu() {
         try {

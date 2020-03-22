@@ -1,5 +1,7 @@
 package net.ammensa.entity;
 
+import net.ammensa.parse.UsualCourseData;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +43,12 @@ public class Course implements Serializable {
 
     public void displayCourse() {
         System.out.println(toString());
+    }
+
+    public static Course fromUsualCourse(UsualCourseData usualCourse) {
+        Course course = new Course();
+        course.setName(usualCourse.courseName());
+        return course;
     }
 
     @Override

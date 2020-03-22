@@ -6,9 +6,9 @@ import java.util.*;
 
 public class Menu implements Serializable {
 
-    public final static int DAILY_FIRST_COURSES_NUM = 3;
+    public final static int DAILY_FIRST_COURSES_NUM = 2;
     public final static int DAILY_SECOND_COURSES_NUM = 2;
-    public final static int DAILY_SIDE_COURSES_NUM = 2;
+    public final static int DAILY_SIDE_COURSES_NUM = 1;
     public final static int FIRST_COURSES_NUM = DAILY_FIRST_COURSES_NUM;
     public final static int SECOND_COURSES_NUM = DAILY_SECOND_COURSES_NUM + 3;
     public final static int SIDE_COURSES_NUM = DAILY_SIDE_COURSES_NUM + 1;

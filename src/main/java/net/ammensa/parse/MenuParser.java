@@ -14,22 +14,20 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 public class MenuParser {
 
-    private static final Logger log = Logger.getLogger("debug");
+    private static final Logger LOGGER = Logger.getLogger(MenuParser.class.getName());
     private static final String MENU_TXT_HEADER_SAMPLE = "MENU' - PRANZO";
-    public static final String MENU_ITALIAN_DATE = "[a-zA-Z]+['Ì]?\\s+\\d{1,2}\\s+\\w+\\s+\\d+";
-    private static final String MENU_REGEX_HEADER_END = "\\s*" + "(?<italianDate>" + MENU_ITALIAN_DATE + ")\\s+"
-            + "[a-zA-Z]+\\s+\\d{1,2}\\s+\\w+\\s+\\d+" + "\\s+";
+    private static final String MENU_ITALIAN_DATE = "[a-zA-Z]+(?:.|Ì)\\s*\\d{1,2}\\s*[a-z]+\\s*\\d+";
+    private static final String MENU_REGEX_HEADER_END = "(?is).*menu.*\\b(?<italianDate>" + MENU_ITALIAN_DATE + ")\\s*\\n.*\\b[a-z]+\\s*\\d{1,2}\\s*[a-z]+\\s*\\d+";
     private static final String MENU_TXT_ADISU_RECOMMENDATION_SAMPLE = "A.DI.SU.";
     private static final String MENU_REGEX_ADISU_RECOMMENDATION_END = "mediterranean diet." + "\\s+";
     private static final String MENU_REGEX_ADDITIONAL_INGREDIENT = "(?s)(?:\\n\\(\\d\\*\\))(.*?)(?=\\n\\(\\d\\*\\)|\\n\\s*\\B)";
@@ -40,89 +38,53 @@ public class MenuParser {
         try {
             Menu menu = new Menu();
 
-            menuText = cleanMenuText(menuText);
-
-            Pattern pattern = Pattern.compile(MENU_REGEX_HEADER_END);
-
-            Matcher matcher = pattern.matcher(menuText);
-
-            if (matcher.find()) {
-
-                String italianDate = matcher.group("italianDate");
-
-                String[] split = italianDate.split("\\s+");
-
-                split[0] = split[0].substring(0, 3);
-
-                LocalDate menuLocalDate = LocalDate.parse(String.join(" ", split).toLowerCase(), MENU_DATE_TIME_FORMATTER);
-
-                log.info("Date of the menu: " + menuLocalDate);
-
-                menu.setTimestamp(menuLocalDate.atStartOfDay().atZone(ZoneId.of("Europe/Rome")).toInstant().toEpochMilli());
-            }
-
+            /* TODO: refactoring */
+            findMenuLocalDate(menuText)
+                    .ifPresent((menuLocalDate) ->
+                            menu.setTimestamp(menuLocalDate.atStartOfDay().atZone(ZoneId.of("Europe/Rome")).toInstant().toEpochMilli()));
 
             menuText = menuTextCleanup(menuText);
 
-            List<Course> usualSecondCourses = findUsualSecondCourses(menuText);
-            List<Course> usualSideCourses = findUsualSideCourses(menuText);
-            Course usualFruitCourse = findUsualFruitCourse(menuText);
-            Course takeAwayBasket = findTakeAwayBasket(menuText);
+            List<Course> dailyCourses = findDailyCourses(menuText);
 
-            menuText = removeUsualCoursesFromMenuText(usualSecondCourses, menuText);
-            menuText = removeUsualCoursesFromMenuText(usualSideCourses, menuText);
-            menuText = removeUsualCourseFromMenuText(usualFruitCourse, menuText);
-            menuText = removeTakeAwayBasketFromMenuText(menuText);
+            menu.setFirstCourses(findFirstCourses(dailyCourses, menuText));
+            menu.setSecondCourses(findSecondCourses(dailyCourses, menuText));
+            menu.setSideCourses(findSideCourses(dailyCourses, menuText));
+            menu.setFruitCourse(findUsualFruitCourse(menuText));
+            menu.setTakeAwayBasketContent(findTakeAwayBasket(menuText));
 
-            List<Course> dailyCoursesList = findDailyCourses(menuText);
-
-            log.info("parsing complete!");
-
-            List<Course> firstCourses = new ArrayList<>();
-            List<Course> secondCourses = new ArrayList<>();
-            List<Course> sideCourses = new ArrayList<>();
-
-            firstCourses.addAll(findDailyFirstCourses(dailyCoursesList));
-
-            secondCourses.addAll(findDailySecondCourses(dailyCoursesList));
-            secondCourses.addAll(usualSecondCourses);
-
-            sideCourses.addAll(usualSideCourses);
-            sideCourses.addAll(findDailySideCourses(dailyCoursesList));
-
-            menu.setFirstCourses(firstCourses);
-            menu.setSecondCourses(secondCourses);
-            menu.setSideCourses(sideCourses);
-
-            menu.setFruitCourse(usualFruitCourse);
-            menu.setTakeAwayBasketContent(takeAwayBasket);
+            LOGGER.info("parsing complete!");
 
             return menu;
 
         } catch (Exception ex) {
             MenuParseException mpex = new MenuParseException(
-                    "an error occourred " + "while parsing the menu (" + ex.getMessage() + ")");
+                    "an error occourred while parsing the menu (" + ex.getMessage() + ")");
             mpex.initCause(ex);
             throw mpex;
         }
     }
 
     private String menuTextCleanup(String menuText) {
-        menuText = removeMenuHeaders(menuText);
-        menuText = removeMenuFooters(menuText);
-        menuText = removeAdditionalIngredients(menuText);
-        return menuText;
+        return Stream.of(menuText)
+                .map(this::cleanMenuText)
+                .map(this::removeMenuHeaders)
+                .map(this::removeMenuFooters)
+                .map(this::removeAdditionalIngredients)
+                .collect(Collectors.joining());
     }
 
     private String cleanMenuText(String menuToClean) {
-
         return menuToClean
                 /* replacing double space - common mistake */
                 .replace("  ", " ")
                 /* uniform hyphens */
                 .replace("–", "-")
                 /* uniform thicks */
-                .replace("’", "'");
+                .replace("’", "'")
+                /* TODO: fix in the antlr grammar */
+                .replaceAll("\\(+", "\\(")
+                .replaceAll("\\)+", "\\)");
     }
 
     private String removeMenuHeaders(String menuText) {
@@ -133,7 +95,7 @@ public class MenuParser {
         } else if (menuText.contains(MENU_TXT_ADISU_RECOMMENDATION_SAMPLE)) {
             /* remove adisu recommendation */
             menuText = menuText.split(MENU_REGEX_ADISU_RECOMMENDATION_END)[1];
-            /* shitty workaround - need to be fixed */
+            /* TODO: shitty workaround - need to be fixed */
             if (Pattern.compile(MENU_REGEX_HEADER_END).matcher(menuText).find()) {
                 menuText = menuText.split(MENU_REGEX_HEADER_END)[1];
             }
@@ -142,109 +104,58 @@ public class MenuParser {
     }
 
     private String removeMenuFooters(String menuText) {
-
-        return menuText.replaceFirst("I prodotti con.*\\n", "");
+        return menuText
+                .replaceFirst("I prodotti con.*", "")
+                .replaceFirst("I prodotti sottolineati.*", "");
     }
 
     private String removeAdditionalIngredients(String menuText) {
-
         return menuText.replaceAll(MENU_REGEX_ADDITIONAL_INGREDIENT, "");
     }
 
-    private List<Course> findUsualSecondCourses(String menu) {
+    private Optional<LocalDate> findMenuLocalDate(String menuText) {
 
-        List<Course> usualSecondCourses = new ArrayList<Course>();
+        Pattern pattern = Pattern.compile(MENU_REGEX_HEADER_END);
+        Matcher matcher = pattern.matcher(menuText);
 
-        if (menu.contains(UsualCoursesNames.MOZZARELLA_COURSE_NAME)) {
-            usualSecondCourses.add(new Course(UsualCoursesNames.MOZZARELLA_COURSE_NAME));
+        if (matcher.find()) {
+            LocalDate menuLocalDate = parseMenuDate(matcher);
+            LOGGER.info("Date of the menu: " + menuLocalDate);
+            return Optional.of(menuLocalDate);
+        } else {
+            return Optional.empty();
         }
-        if (menu.contains(UsualCoursesNames.FORMAGGI_COURSE_NAME)) {
-            usualSecondCourses.add(new Course(UsualCoursesNames.FORMAGGI_COURSE_NAME));
-        }
-        if (menu.contains(UsualCoursesNames.PIATTI_FREDDI_COURSE_NAME)) {
-            usualSecondCourses.add(new Course(UsualCoursesNames.PIATTI_FREDDI_COURSE_NAME));
-        }
-        return usualSecondCourses;
     }
 
-    private List<Course> findUsualSideCourses(String menu) {
-
-        List<Course> usualSideCourses = new ArrayList<Course>();
-
-        // if (menu.contains(UsualCoursesNames.INSALATA_COURSE_NAME)) {
-        // usualSideCourses.add(new
-        // Course(UsualCoursesNames.INSALATA_COURSE_NAME));
-        // }
-        return usualSideCourses;
+    private LocalDate parseMenuDate(Matcher matcher) {
+        String italianDate = matcher.group("italianDate");
+        String[] split = italianDate.split("\\s+");
+        split[0] = split[0].substring(0, 3);
+        return LocalDate.parse(String.join(" ", split).toLowerCase(), MENU_DATE_TIME_FORMATTER);
     }
 
-    private Course findUsualFruitCourse(String menu) {
+    private List<Course> findDailyCourses(String menuText) {
 
-        Course fruitCourse = new Course();
-        if (menu.contains(UsualCoursesNames.FRUTTA_COURSE_NAME)) {
-            fruitCourse.setName(UsualCoursesNames.FRUTTA_COURSE_NAME);
-        } else
-            // course not found, adding a dummy course name
-            fruitCourse.setName("Niente frutta oggi? Strano...");
-        return fruitCourse;
-    }
-
-    private Course findTakeAwayBasket(String menu) {
-
-        Course takeAwayBasket = new Course(UsualCoursesNames.CESTINO_COURSE_NAME);
-        try {
-
-            Pattern basketPattern = Pattern
-                    .compile(UsualCoursesNames.CESTINO_COURSE_NAME + "\\s*(?:\\:|-|=)?\\s*(.*)\\s+"
-                            + UsualCoursesNames.TAKE_AWAY_BASKET_COURSE_NAME + "\\s*(?:\\:|-|=)?\\s*(.*)");
-            Matcher basketMatcher = basketPattern.matcher(menu);
-            basketMatcher.find();
-
-            takeAwayBasket.addIngredients(basketMatcher.group(1));
-            takeAwayBasket.addIngredients(basketMatcher.group(2));
-        } catch (Exception ex) {
-            // course not found, adding a dummy course ingredient
-            takeAwayBasket.addIngredients("chissà cosa ci metteranno oggi...");
-            System.out.println("CESTINO ERROR: " + ex);
-            ex.printStackTrace();
-        }
-        return takeAwayBasket;
-    }
-
-    private String removeUsualCoursesFromMenuText(List<Course> courses, String menuText) {
-        for (Course c : courses) {
-            menuText = removeUsualCourseFromMenuText(c, menuText);
-        }
-        return menuText;
-    }
-
-    private String removeUsualCourseFromMenuText(Course course, String menuText) {
-        if (course != null) {
-            return menuText.replaceFirst(course.getName() + "\\s+", "");
-        } else
-            return menuText;
-    }
-
-    private String removeTakeAwayBasketFromMenuText(String menuTxt) {
-        return menuTxt.replaceFirst(UsualCoursesNames.CESTINO_COURSE_NAME + ".*\\n?", "")
-                .replaceFirst(UsualCoursesNames.TAKE_AWAY_BASKET_COURSE_NAME + ".*\\n?", "");
-    }
-
-    private List<Course> findDailyCourses(String menu) {
+        String menu = removeUsualCoursesFromMenuText(menuText);
 
         String[] splittedCourses = splitDailyCoursesFromMenuText(menu);
 
-        List<Course> courses = new ArrayList<Course>();
-
-        for (String courseString : splittedCourses) {
-            courses.add(parseDailyCourse(courseString));
-        }
+        List<Course> courses = Arrays.stream(splittedCourses)
+                .map(this::parseDailyCourse)
+                .collect(Collectors.toList());
 
         if (areSecondCoursesInLastPosition(menu)) {
-            courses = reorderCourses(courses);
+            reorderCourses(courses);
         }
 
         return courses;
+    }
+
+    private String removeUsualCoursesFromMenuText(String menuText) {
+        for (UsualCourseData ucd : UsualCourseData.values()) {
+            menuText = menuText.replaceFirst(ucd.regex(), "");
+        }
+        return menuText;
     }
 
     private String[] splitDailyCoursesFromMenuText(String menu) {
@@ -258,7 +169,7 @@ public class MenuParser {
                 parsedCourse = parseCourse(courseString);
             }
         } catch (Exception ex) {
-            log.severe("ERROR PARSING DAILY COURSE: " + ex);
+            LOGGER.severe("ERROR PARSING DAILY COURSE: " + ex);
             parsedCourse = new Course("Pasto a sorpresa! :)");
         }
         return parsedCourse;
@@ -288,7 +199,7 @@ public class MenuParser {
         return secondLastCourseTextFirstChar && lastSecondCourseTextFirstChar;
     }
 
-    private List<Course> reorderCourses(List<Course> courses) {
+    private void reorderCourses(List<Course> courses) {
 
         List<Course> secondCourses = courses.subList(courses.size() - Menu.DAILY_SECOND_COURSES_NUM, courses.size());
 
@@ -296,12 +207,39 @@ public class MenuParser {
 
         courses.remove(courses.size() - 1);
         courses.remove(courses.size() - 1);
+    }
 
-        return courses;
+    private List<Course> findFirstCourses(List<Course> dailyCourses, String menuText) {
+        return Stream.of(findDailyFirstCourses(dailyCourses), findUsualFirstCourses(menuText))
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
     }
 
     private List<Course> findDailyFirstCourses(List<Course> dailyCoursesList) {
         return dailyCoursesList.subList(0, Menu.DAILY_FIRST_COURSES_NUM);
+    }
+
+    private List<Course> findUsualFirstCourses(String menu) {
+
+        if (menuContainsUsualCourse(menu, UsualCourseData.PASTA_IN_BIANCO_O_AL_POMODORO)) {
+
+            Course pasta = Course.fromUsualCourse(UsualCourseData.PASTA_IN_BIANCO_O_AL_POMODORO);
+
+            Matcher pastaMatcher = Pattern.compile(".*" + UsualCourseData.PASTA_IN_BIANCO_O_AL_POMODORO.regex() + ".*").matcher(menu);
+            if (pastaMatcher.find()) {
+                pasta.addIngredients(pastaMatcher.group(1));
+                pasta.addIngredients(pastaMatcher.group(2));
+            }
+            return Collections.singletonList(pasta);
+        }
+
+        return Collections.emptyList();
+    }
+
+    private List<Course> findSecondCourses(List<Course> dailyCourses, String menuText) {
+        return Stream.of(findDailySecondCourses(dailyCourses), findUsualSecondCourses(menuText))
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
     }
 
     private List<Course> findDailySecondCourses(List<Course> dailyCoursesList) {
@@ -309,8 +247,60 @@ public class MenuParser {
                 Menu.FIRST_COURSES_NUM + Menu.DAILY_SECOND_COURSES_NUM);
     }
 
+    private List<Course> findUsualSecondCourses(String menu) {
+        return Stream.of(UsualCourseData.MOZZARELLA, UsualCourseData.FORMAGGI_MISTI, UsualCourseData.PIATTI_FREDDI)
+                .filter(ucd -> menuContainsUsualCourse(menu, ucd))
+                .map(Course::fromUsualCourse)
+                .collect(Collectors.toList());
+    }
+
+    private List<Course> findSideCourses(List<Course> dailyCourses, String menuText) {
+        return Stream.of(findDailySideCourses(dailyCourses), findUsualSideCourses(menuText))
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+    }
+
     private List<Course> findDailySideCourses(List<Course> dailyCoursesList) {
-        return dailyCoursesList.subList(Menu.DAILY_FIRST_COURSES_NUM + Menu.DAILY_SIDE_COURSES_NUM,
-                Menu.DAILY_FIRST_COURSES_NUM + Menu.DAILY_SIDE_COURSES_NUM + Menu.DAILY_SIDE_COURSES_NUM);
+        return Collections.singletonList(dailyCoursesList.get(dailyCoursesList.size() - 1));
+    }
+
+    private List<Course> findUsualSideCourses(String menu) {
+
+        if (menuContainsUsualCourse(menu, UsualCourseData.INSALATA_MISTA)) {
+            return Collections.singletonList(Course.fromUsualCourse(UsualCourseData.INSALATA_MISTA));
+        }
+        return Collections.emptyList();
+    }
+
+    private Course findUsualFruitCourse(String menu) {
+
+        if (menuContainsUsualCourse(menu, UsualCourseData.FRUTTA_DI_STAGIONE)) {
+            return Course.fromUsualCourse(UsualCourseData.FRUTTA_DI_STAGIONE);
+        }
+
+        Course dummyFruitCourse = new Course();
+        dummyFruitCourse.setName("Niente frutta oggi? Strano...");
+        return dummyFruitCourse;
+    }
+
+    private boolean menuContainsUsualCourse(String menu, UsualCourseData usualCourseData) {
+        return menu.matches("(?s).*" + usualCourseData.regex() + ".*");
+    }
+
+    private Course findTakeAwayBasket(String menu) {
+
+        Course takeAwayBasket = Course.fromUsualCourse(UsualCourseData.CESTINO);
+
+        Matcher basketMatcher = Pattern.compile(".*" + UsualCourseData.CESTINO.regex() + ".*").matcher(menu);
+
+        if (basketMatcher.find()) {
+            takeAwayBasket.addIngredients(basketMatcher.group(1));
+            takeAwayBasket.addIngredients(basketMatcher.group(2));
+        } else {
+            // course not found, adding a dummy course ingredient
+            takeAwayBasket.addIngredients("chissà cosa ci metteranno oggi...");
+        }
+
+        return takeAwayBasket;
     }
 }
