@@ -58,6 +58,20 @@ class MenuParserTest {
     }
 
     @Test
+    public void parseMenuWithMalformedDailyCourseTest() throws Exception {
+
+        String menuText = new PdfConversion()
+                .toText(Files.readAllBytes(new ClassPathResource("menu/GIOVEDI' 07 MARZO  2019 PRANZO.pdf")
+                        .getFile().toPath()));
+
+        menuText = menuText.replaceFirst("Pasta.+", "(");
+
+        Menu menu = new MenuParser().parseMenu(menuText);
+
+        assertTrue(menu.getFirstCourses().get(0).getName().contains("sorpresa"));
+    }
+
+    @Test
     public void pastaRegexTest() {
 
         /* GIOVEDI' 18 APRILE 2019 PRANZO.pdf */

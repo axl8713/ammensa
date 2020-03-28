@@ -26,7 +26,7 @@ public class MenuParser {
     private static final Logger LOGGER = Logger.getLogger(MenuParser.class.getName());
     private static final String MENU_TXT_HEADER_SAMPLE = "MENU' - PRANZO";
     private static final String MENU_ITALIAN_DATE = "[a-zA-Z]+(?:.|Ì)\\s*\\d{1,2}\\s*[a-z]+\\s*\\d+";
-    private static final String MENU_REGEX_HEADER_END = "(?is).*menu.*\\b(?<italianDate>" + MENU_ITALIAN_DATE + ")\\s*\\n.*\\b[a-z]+\\s*\\d{1,2}\\s*[a-z]+\\s*\\d+";
+    private static final String MENU_REGEX_HEADER_END = "(?is).*menu.*\\b(?<italianDate>" + MENU_ITALIAN_DATE + ")\\s*\\n.*\\b[a-z]+\\s*\\d{1,2}\\s*[a-z]+\\s*\\d+\\s*";
     private static final String MENU_TXT_ADISU_RECOMMENDATION_SAMPLE = "A.DI.SU.";
     private static final String MENU_REGEX_ADISU_RECOMMENDATION_END = "mediterranean diet." + "\\s+";
     private static final String MENU_REGEX_ADDITIONAL_INGREDIENT = "(?s)(?:\\n\\(\\d\\*\\))(.*?)(?=\\n\\(\\d\\*\\)|\\n\\s*\\B)";
@@ -158,16 +158,16 @@ public class MenuParser {
     }
 
     private Course parseDailyCourse(String courseString) {
-        Course parsedCourse = null;
         try {
-            if (!courseString.matches("\\s+")) {
-                parsedCourse = parseCourse(courseString);
-            }
+
+            if (!courseString.isBlank())
+                return parseCourse(courseString);
+
         } catch (Exception ex) {
-            LOGGER.severe("ERROR PARSING DAILY COURSE: " + ex);
-            parsedCourse = new Course("Pasto a sorpresa! :)");
+            LOGGER.warning("ERROR PARSING DAILY COURSE: " + ex);
         }
-        return parsedCourse;
+
+        return new Course("Pasto a sorpresa! :)");
     }
 
     private Course parseCourse(String courseString) {
