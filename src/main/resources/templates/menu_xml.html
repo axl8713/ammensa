@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <AMMensa>
     <info th:attr="status=${status.code}" th:text="${status.message}"></info>
-    <menu th:if="${menu!=null}" th:attr=" todayMenu=${menu.todayMenu}" xmlns:th="http://www.thymeleaf.org">
-        <date th:attr="millis=${menu.timestamp}" th:text="${menu.itLocaleDateText}"></date>
+    <menu th:if="${menu!=null}" xmlns:th="http://www.thymeleaf.org">
+        <date th:attr="millis=${menu.timestamp}" th:text="${#temporals.format(menu.date, 'EEEE d MMMM Y')}"></date>
         <menuUrl th:text="${menu.url}"></menuUrl>
         <firstCourses>
             <course th:each="course : ${menu.firstCourses}">

@@ -11,8 +11,7 @@ import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 class MenuUpdateTest {
 
@@ -25,7 +24,7 @@ class MenuUpdateTest {
         MenuRepository menuRepositoryMock = Mockito.mock(MenuRepository.class);
 
         Menu menuStub = new Menu() {{
-            setTimestamp(Instant.now().minus(Duration.ofDays(1)).toEpochMilli());
+            setDate(LocalDateTime.now().minusDays(1).toLocalDate());
         }};
         MenuParser menuParserMock = Mockito.when(Mockito.mock(MenuParser.class).parseMenu(Mockito.any())).thenReturn(menuStub).getMock();
 

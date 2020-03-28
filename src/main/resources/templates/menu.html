@@ -13,7 +13,7 @@
     </div>
     <div th:if="${menu!=null}" id="menu" style="text-align: left;">
         <h1>
-            Menu del giorno &#x2013; <span th:text="${menu.itLocaleDateText}"></span>
+            Menu del giorno &#x2013; <span th:text="${#temporals.format(menu.date, 'EEEE d MMMM Y')}"></span>
         </h1>
         <a th:href="${menu.url}" th:text="${menu.url}"></a>
         <h2>Primi</h2>

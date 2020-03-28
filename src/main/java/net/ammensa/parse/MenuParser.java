@@ -12,7 +12,6 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.logging.Logger;
@@ -34,14 +33,10 @@ public class MenuParser {
     private static final DateTimeFormatter MENU_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("EE dd MMMM y", Locale.ITALY);
 
     public Menu parseMenu(String menuText) throws MenuParseException {
-
         try {
             Menu menu = new Menu();
 
-            /* TODO: refactoring */
-            findMenuLocalDate(menuText)
-                    .ifPresent((menuLocalDate) ->
-                            menu.setTimestamp(menuLocalDate.atStartOfDay().atZone(ZoneId.of("Europe/Rome")).toInstant().toEpochMilli()));
+            menu.setDate(findMenuLocalDate(menuText).orElseThrow());
 
             menuText = menuTextCleanup(menuText);
 
@@ -62,6 +57,20 @@ public class MenuParser {
                     "an error occourred while parsing the menu (" + ex.getMessage() + ")");
             mpex.initCause(ex);
             throw mpex;
+        }
+    }
+
+    private Optional<LocalDate> findMenuLocalDate(String menuText) {
+
+        Matcher matcher = Pattern.compile(MENU_REGEX_HEADER_END)
+                .matcher(menuText);
+
+        if (matcher.find()) {
+            LocalDate menuLocalDate = parseMenuDate(matcher);
+            LOGGER.info("Date of the menu: " + menuLocalDate);
+            return Optional.of(menuLocalDate);
+        } else {
+            return Optional.empty();
         }
     }
 
@@ -111,20 +120,6 @@ public class MenuParser {
 
     private String removeAdditionalIngredients(String menuText) {
         return menuText.replaceAll(MENU_REGEX_ADDITIONAL_INGREDIENT, "");
-    }
-
-    private Optional<LocalDate> findMenuLocalDate(String menuText) {
-
-        Pattern pattern = Pattern.compile(MENU_REGEX_HEADER_END);
-        Matcher matcher = pattern.matcher(menuText);
-
-        if (matcher.find()) {
-            LocalDate menuLocalDate = parseMenuDate(matcher);
-            LOGGER.info("Date of the menu: " + menuLocalDate);
-            return Optional.of(menuLocalDate);
-        } else {
-            return Optional.empty();
-        }
     }
 
     private LocalDate parseMenuDate(Matcher matcher) {

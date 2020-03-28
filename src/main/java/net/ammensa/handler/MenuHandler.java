@@ -55,7 +55,7 @@ public class MenuHandler {
                     .flatMap(optionalMenu -> optionalMenu
                             .map(menu -> {
 
-                                LocalDate menuDate = ZonedDateTime.ofInstant(Instant.ofEpochMilli(menu.getTimestamp()), ITALY_CLOCK.getZone()).toLocalDate();
+                                LocalDate menuDate = menu.getDate();
 
                                 if (!menuDate.isEqual(now.toLocalDate())) {
 
@@ -186,7 +186,7 @@ public class MenuHandler {
                 return response.body(fromObject(body));
 
             } else {
-                return response.render(templateName, new HashMap<String, Object>() {
+                return response.render(templateName, new HashMap<>() {
                     {
                         put("status", menuStatus);
                         put("menu", menu);

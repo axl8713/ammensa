@@ -11,7 +11,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.time.*;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.logging.Logger;
 
 @Component
@@ -71,8 +73,7 @@ public class MenuUpdate {
     }
 
     private boolean isTodayMenu(Menu menu) {
-        LocalDate menuDate = ZonedDateTime.ofInstant(Instant.ofEpochMilli(menu.getTimestamp()), ITALY_CLOCK.getZone()).toLocalDate();
-        LocalDate now = ZonedDateTime.now(ITALY_CLOCK).toLocalDate();
-        return menuDate.isEqual(now);
+        LocalDate today = LocalDate.now(ITALY_CLOCK);
+        return menu.getDate().isEqual(today);
     }
 }

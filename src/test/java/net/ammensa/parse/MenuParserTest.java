@@ -20,19 +20,16 @@ class MenuParserTest {
 
         PdfConversion pdfConversion = new PdfConversion();
 
-        List<Path> menusFiles = Files.list(Path.of("src/integration-test/resources/menu"))
+        List<Path> menusFiles = Files.list(new ClassPathResource("menu").getFile().toPath())
                 .collect(Collectors.toList());
 
         for (Path menuFile : menusFiles) {
 
-            byte[] menuBytes = Files.readAllBytes(menuFile);
-
-            String menuText = pdfConversion.toText(menuBytes);
+            String menuText = pdfConversion.toText(Files.readAllBytes(menuFile));
 
             MenuParser menuParser = new MenuParser();
             Menu menu = menuParser.parseMenu(menuText);
 
-            assertNotNull(menu.getItLocaleDateText());
             assertEquals(3, menu.getFirstCourses().size());
             assertEquals(5, menu.getSecondCourses().size());
             assertEquals(2, menu.getSideCourses().size());
@@ -44,19 +41,15 @@ class MenuParserTest {
     @Test
     public void parseMenuWithoutAnUsualCourseTest() throws Exception {
 
-        PdfConversion pdfConversion = new PdfConversion();
-
-        byte[] menuBytes = Files.readAllBytes(new ClassPathResource("menu/MARTEDI' 19 NOVEMBRE 2019  PRANZO.pdf").getFile().toPath());
-
-        String menuText = pdfConversion.toText(menuBytes);
+        String menuText = new PdfConversion()
+                .toText(Files.readAllBytes(new ClassPathResource("menu/MARTEDI' 19 NOVEMBRE 2019  PRANZO.pdf")
+                        .getFile().toPath()));
 
         String regex = UsualCourseData.MOZZARELLA.regex();
         menuText = menuText.replaceFirst(regex, "");
 
-        MenuParser menuParser = new MenuParser();
-        Menu menu = menuParser.parseMenu(menuText);
+        Menu menu = new MenuParser().parseMenu(menuText);
 
-        assertNotNull(menu.getItLocaleDateText());
         assertEquals(3, menu.getFirstCourses().size());
         assertEquals(4, menu.getSecondCourses().size());
         assertEquals(2, menu.getSideCourses().size());
@@ -75,7 +68,7 @@ class MenuParserTest {
         final String pasta_2 = " Pasta in bianco o al pomodoro[aglio, basilico, olio extra vergine d'oliva, sale] / riso in bianco \n"
                 + "(Pasta with extra virgin olive oil /or with tomato[garlic, basil, extra virgin olive oil, salt] sauce / boiled rice, salt) ";
 
-        /* no-fruit-course.pdf */
+        /* MARTEDI' 19 NOVEMBRE 2019  PRANZO.pdf */
         final String pasta_3 = "Pasta (glutine) in bianco o al pomodoro (aglio, basilico, olio extra vergine d'oliva, sale) / riso in bianco \n" +
                 "Boiled pasta (gluten) or with tomato sauce (garlic, basil, extra virgin olive oil, salt) / boiled rice ";
 
@@ -92,7 +85,7 @@ class MenuParserTest {
 
         /* GIOVEDI' 18 APRILE 2019 PRANZO.pdf */
         final String mozzarella_1 = "Mozzarella di bufala - Fresh buffalo mozzarella ";
-        /* no-fruit-course.pdf */
+        /* MARTEDI' 19 NOVEMBRE 2019  PRANZO.pdf */
         final String mozzarella_2 = "Mozzarella di Bufala (latte) - Fresh Buffalo Mozzarella (milk) ";
 
         String regex = UsualCourseData.MOZZARELLA.regex();
@@ -107,7 +100,7 @@ class MenuParserTest {
 
         /* GIOVEDI' 18 APRILE 2019 PRANZO.pdf */
         final String formaggi_1 = "Formaggi misti     - Mixed cheeses ";
-        /* no-fruit-course.pdf */
+        /* MARTEDI' 19 NOVEMBRE 2019  PRANZO.pdf */
         final String formaggi_2 = "Formaggi Misti (latte)     - Mixed Cheeses (milk) ";
 
         String regex = UsualCourseData.FORMAGGI_MISTI.regex();
