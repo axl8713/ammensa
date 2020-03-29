@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
-import static org.springframework.web.reactive.function.BodyInserters.fromObject;
+import static org.springframework.web.reactive.function.BodyInserters.fromValue;
 
 @Component
 public class MenuHandler {
@@ -125,6 +125,12 @@ public class MenuHandler {
         return responseBuilder.build();
     }
 
+    public Mono<ServerResponse> manualMenuUpdate(ServerRequest request) {
+        return retrieveMenu()
+                .flatMap(m -> ServerResponse.ok().body(fromValue(m)))
+                .switchIfEmpty(ServerResponse.notFound().build());
+    }
+
     private static final class ResponseBuilder {
 
         private MediaType contentType;
@@ -183,7 +189,7 @@ public class MenuHandler {
                 } else {
                     body = menu;
                 }
-                return response.body(fromObject(body));
+                return response.body(fromValue(body));
 
             } else {
                 return response.render(templateName, new HashMap<>() {
@@ -194,13 +200,6 @@ public class MenuHandler {
                 });
             }
         }
-    }
-
-
-    public Mono<ServerResponse> manualMenuUpdate(ServerRequest request) {
-        return retrieveMenu()
-                .flatMap(m -> ServerResponse.ok().body(fromObject(m)))
-                .switchIfEmpty(ServerResponse.notFound().build());
     }
 
     private Mono<Menu> retrieveMenu() {
