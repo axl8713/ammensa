@@ -1,15 +1,18 @@
 package net.ammensa;
 
+import net.ammensa.cron.ApplicationStartMenuUpdater;
 import net.ammensa.cron.MenuUpdate;
 import net.ammensa.entity.Menu;
 import net.ammensa.handler.MenuHandler;
 import net.ammensa.repository.MenuRepository;
+import net.ammensa.scrape.MenuScraper;
 import net.ammensa.utils.HttpDownload;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Mono;
@@ -24,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
+@MockBean(ApplicationStartMenuUpdater.class)
 public class ParseMenuIT {
 
     private static final ZoneId ROME_ZONE_ID = ZoneId.of("Europe/Rome");
@@ -34,13 +38,14 @@ public class ParseMenuIT {
     private MenuRepository menuRepository;
     @Mock
     HttpDownload httpDownloadMock;
+    @Mock
+    MenuScraper menuScraperMock;
 
     @Test
     public void findAndParseMenu() throws Exception {
 
         /* TODO:
             - usare un webserver di test
-            - evitare di fare lo scrape della pagina adisu
         */
         byte[] menuBytes = Files.readAllBytes(new ClassPathResource("menu/MERCOLEDI' 20 FEBBRAIO 2019 PRANZO.pdf").getFile().toPath());
         Mono<byte[]> monoMenuBytes = Mono.just(menuBytes);
@@ -50,6 +55,9 @@ public class ParseMenuIT {
         Clock fixed = Clock.fixed(LocalDateTime.parse("2019-02-20T12:12:12").atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
         ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
         ReflectionTestUtils.setField(menuUpdate, "ITALY_CLOCK", fixed);
+
+        Mockito.when(menuScraperMock.scrapePdfMenuUrl()).thenReturn("pdfmenuurl");
+        ReflectionTestUtils.setField(menuUpdate, "menuScraper", menuScraperMock);
 
         menuUpdate.updateMenu().subscribe((a) -> {
 
