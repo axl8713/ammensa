@@ -15,12 +15,12 @@ public class MenuRepository {
 
     private static final Logger LOGGER = Logger.getLogger(MenuRepository.class.getName());
 
-    private ObjectRepository<Menu> nitriteRepository;
+    private final ObjectRepository<Menu> nitriteRepository;
 
     {
         Nitrite db = Nitrite.builder().openOrCreate();
         this.nitriteRepository = db.getRepository(Menu.class);
-        this.nitriteRepository.register(changeInfo -> LOGGER.info("menu change: " + changeInfo.getChangeType()));
+        this.nitriteRepository.register(changeInfo -> LOGGER.fine("menu change: " + changeInfo.getChangeType()));
     }
 
     public void save(Menu menu) {
@@ -29,7 +29,7 @@ public class MenuRepository {
 
     public Optional<Menu> retrieve() {
 
-        LOGGER.info("repo retrieve");
+        LOGGER.fine("repo retrieve");
 
         Cursor<Menu> cursor = nitriteRepository.find();
 

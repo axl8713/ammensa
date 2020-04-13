@@ -44,6 +44,7 @@ public class MenuUpdate {
 
             LOGGER.info("update");
 
+            /* todo: vale la pena controllare se il menu è di oggi prima di cancellarlo */
             menuRepository.delete();
 
             String menuUrl = menuScraper.scrapePdfMenuUrl();

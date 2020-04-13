@@ -11,13 +11,13 @@ import java.util.logging.Logger;
 @Component
 public class HttpDownload {
 
-    private static WebClient webClient = WebClient.create();
+    private static final Logger LOGGER = Logger.getLogger(HttpDownload.class.getName());
 
-    private static final Logger log = Logger.getLogger("debug");
+    private static final WebClient webClient = WebClient.create();
 
     public Mono<byte[]> download(String resourceUrl) {
 
-        log.info("starting download from " + resourceUrl);
+        LOGGER.info("starting download from " + resourceUrl);
 
         return webClient
                 .method(HttpMethod.GET)
@@ -25,7 +25,7 @@ public class HttpDownload {
                 .exchange()
                 .flatMap(response -> {
                     if (response.statusCode().isError()) {
-                        log.severe("error contacting " + resourceUrl);
+                        LOGGER.severe("error contacting " + resourceUrl);
                         return Mono.error(Exception::new);
                     }
                     return response.bodyToMono(ByteArrayResource.class);

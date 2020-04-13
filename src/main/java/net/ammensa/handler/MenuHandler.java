@@ -43,7 +43,7 @@ public class MenuHandler {
 
             ZonedDateTime now = ZonedDateTime.now(ITALY_CLOCK);
 
-            LOGGER.info("the time right now is " + now);
+            LOGGER.fine("the time right now is " + now);
 
             if (isMensaClosed(now)) {
                 return handleMessageResponse(request, MenuStatus.MENSA_CLOSED);

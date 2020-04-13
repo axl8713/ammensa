@@ -67,7 +67,7 @@ public class MenuParser {
 
         if (matcher.find()) {
             LocalDate menuLocalDate = parseMenuDate(matcher);
-            LOGGER.info("Date of the menu: " + menuLocalDate);
+            LOGGER.fine("Date of the menu: " + menuLocalDate);
             return Optional.of(menuLocalDate);
         } else {
             return Optional.empty();

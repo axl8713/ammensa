@@ -3,6 +3,7 @@ package net.ammensa.property;
 import java.util.HashMap;
 import java.util.Map;
 
+/* todo: sostituire con un file esterno */
 public abstract class AMMensaProperties {
 
 	private static final Map<String, String> propertiesMap = new HashMap<String, String>();
@@ -18,5 +19,4 @@ public abstract class AMMensaProperties {
 	static public String retrieveProperty(String key) {
 		return propertiesMap.get(key);
 	}
-
 }
