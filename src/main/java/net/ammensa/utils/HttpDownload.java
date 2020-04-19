@@ -13,13 +13,13 @@ public class HttpDownload {
 
     private static final Logger LOGGER = Logger.getLogger(HttpDownload.class.getName());
 
-    private static final WebClient webClient = WebClient.create();
+    private static final WebClient WEB_CLIENT = WebClient.create();
 
     public Mono<byte[]> download(String resourceUrl) {
 
         LOGGER.info("starting download from " + resourceUrl);
 
-        return webClient
+        return WEB_CLIENT
                 .method(HttpMethod.GET)
                 .uri(resourceUrl)
                 .exchange()

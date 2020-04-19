@@ -204,9 +204,8 @@ public class MenuHandler {
 
     private Mono<Menu> retrieveMenu() {
         LOGGER.info("retrieve");
-        Mono<Object> objectMono = menuUpdate.updateMenu();
         return Mono
-                .when(objectMono)
+                .when(menuUpdate.updateMenu())
                 .then(Mono.fromCallable(menuRepository::retrieve)
                         /* https://stackoverflow.com/a/53188485/1291616 */
                         .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty)));

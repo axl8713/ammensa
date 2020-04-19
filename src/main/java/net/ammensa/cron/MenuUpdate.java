@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.time.Clock;
-import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.logging.Logger;
 
 @Component
@@ -39,42 +39,55 @@ public class MenuUpdate {
         updateMenu().subscribe((a) -> LOGGER.info("cron refresh complete"));
     }
 
-    public Mono<Object> updateMenu() {
+    public Mono<Menu> updateMenu() {
+
+        LOGGER.info("update");
+
+        return Mono.justOrEmpty(menuRepository.retrieve())
+                .flatMap(menu -> {
+                    if (!isTodayMenu(menu)) {
+                        menuRepository.delete();
+                        return Mono.empty();
+                    } else
+                        return Mono.just(menu);
+                })
+                .switchIfEmpty(Mono.defer(this::downloadAndSaveMenu));
+    }
+
+    private Mono<Menu> downloadAndSaveMenu() {
         try {
-
-            LOGGER.info("update");
-
-            /* todo: vale la pena controllare se il menu è di oggi prima di cancellarlo */
-            menuRepository.delete();
-
             String menuUrl = menuScraper.scrapePdfMenuUrl();
+            return httpDownload.download(menuUrl)
+                    .flatMap(m -> handleDownloadedMenu(menuUrl, m));
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
 
-            Mono<byte[]> monoMenuBytes = httpDownload.download(menuUrl);
+    private Mono<Menu> handleDownloadedMenu(String menuUrl, byte[] m) {
+        try {
+            String menuString = pdfConversion.toText(m);
+            Menu menu = menuParser.parseMenu(menuString);
 
-            return monoMenuBytes.map(m -> {
-                try {
-                    String menuString = pdfConversion.toText(m);
-                    Menu menu = menuParser.parseMenu(menuString);
-
-                    if (isTodayMenu(menu)) {
-                        menu.setUrl(menuUrl);
-                        menuRepository.save(menu);
-                    } else {
-                        LOGGER.info("not today's menu. not saving.");
-                    }
-                } catch (Exception ex) {
-                    throw new RuntimeException(ex);
-                }
-
+            if (isTodayMenu(menu)) {
+                menu.setUrl(menuUrl);
+                menuRepository.save(menu);
+                return Mono.just(menu);
+            } else {
+                LOGGER.info("not today's menu. not saving.");
                 return Mono.empty();
-            });
+            }
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
     }
 
     private boolean isTodayMenu(Menu menu) {
-        LocalDate today = LocalDate.now(ITALY_CLOCK);
-        return menu.getDate().isEqual(today);
+
+        ZonedDateTime today = ZonedDateTime.now(ITALY_CLOCK);
+
+        LOGGER.fine("the time right now is " + today);
+
+        return menu.getDate().isEqual(today.toLocalDate());
     }
 }

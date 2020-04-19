@@ -4,7 +4,6 @@ import net.ammensa.cron.ApplicationStartMenuUpdater;
 import net.ammensa.cron.MenuUpdate;
 import net.ammensa.entity.MenuStatus;
 import net.ammensa.handler.MenuHandler;
-import net.ammensa.parse.MenuParser;
 import net.ammensa.repository.MenuRepository;
 import net.ammensa.scrape.MenuScraper;
 import net.ammensa.utils.HttpDownload;
@@ -37,8 +36,6 @@ public class ServeMenuIT {
     @Autowired
     private MenuUpdate menuUpdate;
     @Autowired
-    private MenuParser menuParser;
-    @Autowired
     private MenuRepository menuRepository;
     @Autowired
     private ApplicationContext applicationContext;
@@ -48,6 +45,11 @@ public class ServeMenuIT {
     MenuScraper menuScraperMock;
 
     private WebTestClient webTestClient;
+
+    @BeforeEach
+    private void initWebTestClient() {
+        webTestClient = WebTestClient.bindToApplicationContext(applicationContext).build();
+    }
 
     @BeforeEach
     public void stubMenuUpdateDownloadAndScrape() throws Exception {
@@ -60,11 +62,6 @@ public class ServeMenuIT {
         ReflectionTestUtils.setField(menuUpdate, "menuScraper", menuScraperMock);
     }
 
-    @BeforeEach
-    private void initWebTestClient() {
-        webTestClient = WebTestClient.bindToApplicationContext(applicationContext).build();
-    }
-
     @Test
     public void xmlMenu() {
 
@@ -75,7 +72,7 @@ public class ServeMenuIT {
         ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
         ReflectionTestUtils.setField(menuUpdate, "ITALY_CLOCK", fixed);
 
-        menuUpdate.updateMenu().subscribe((a) -> {
+        menuUpdate.updateMenu().subscribe(a -> {
             webTestClient
                     .get().uri("/")
                     .accept(MediaType.APPLICATION_XML)
@@ -92,8 +89,8 @@ public class ServeMenuIT {
             - usare un webserver di test
         */
         Clock fixed = Clock.fixed(LocalDateTime.parse("2019-02-20T22:22:22").atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
-        ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
         ReflectionTestUtils.setField(menuUpdate, "ITALY_CLOCK", fixed);
+        ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
 
         menuUpdate.updateMenu().subscribe((a) -> {
             webTestClient
@@ -193,9 +190,6 @@ public class ServeMenuIT {
     public void sundayMenuTest() {
 
         LocalDate sunday = Year.of(2012).atMonthDay(MonthDay.of(Month.JULY, 1)).with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
-
-        System.out.println(sunday);
-
         Clock fixed = Clock.fixed(sunday.atStartOfDay().atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
         ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
 
