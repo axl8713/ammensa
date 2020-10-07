@@ -135,15 +135,9 @@ public class MenuParser {
 
         String[] splittedCourses = splitDailyCoursesFromMenuText(menu);
 
-        List<Course> courses = Arrays.stream(splittedCourses)
+        return Arrays.stream(splittedCourses)
                 .map(this::parseDailyCourse)
                 .collect(Collectors.toList());
-
-        if (areSecondCoursesInLastPosition(menu)) {
-            reorderCourses(courses);
-        }
-
-        return courses;
     }
 
     private String removeUsualCoursesFromMenuText(String menuText) {
@@ -154,7 +148,7 @@ public class MenuParser {
     }
 
     private String[] splitDailyCoursesFromMenuText(String menu) {
-        return menu.split("\\)\\s{2,}(?=\\w|\\*)");
+        return menu.split("[).]\\s{2,}(?=\\w|\\*)");
     }
 
     private Course parseDailyCourse(String courseString) {
@@ -179,29 +173,6 @@ public class MenuParser {
 
         CourseExtractorVisitor visitor = new CourseExtractorVisitor(parser.course());
         return visitor.extractCourse();
-    }
-
-    private boolean areSecondCoursesInLastPosition(String menuText) {
-
-        String[] dailyCoursesSplittedText = menuText.split("\\)\\s*(?=\\s\\w|\\*)");
-
-        List<String> dailySecondCoursesText = Arrays.asList(dailyCoursesSplittedText).subList(
-                dailyCoursesSplittedText.length - Menu.DAILY_SECOND_COURSES_NUM, dailyCoursesSplittedText.length);
-
-        boolean secondLastCourseTextFirstChar = Character.isSpaceChar(dailySecondCoursesText.get(0).charAt(0));
-        boolean lastSecondCourseTextFirstChar = Character.isSpaceChar(dailySecondCoursesText.get(1).charAt(0));
-
-        return secondLastCourseTextFirstChar && lastSecondCourseTextFirstChar;
-    }
-
-    private void reorderCourses(List<Course> courses) {
-
-        List<Course> secondCourses = courses.subList(courses.size() - Menu.DAILY_SECOND_COURSES_NUM, courses.size());
-
-        courses.addAll(Menu.DAILY_FIRST_COURSES_NUM, secondCourses);
-
-        courses.remove(courses.size() - 1);
-        courses.remove(courses.size() - 1);
     }
 
     private List<Course> findFirstCourses(List<Course> dailyCourses, String menuText) {
@@ -250,13 +221,12 @@ public class MenuParser {
     }
 
     private List<Course> findSideCourses(List<Course> dailyCourses, String menuText) {
-        return Stream.of(findDailySideCourses(dailyCourses), findUsualSideCourses(menuText))
+
+        /* TODO: cambiare metodo per cercare i contorni. conviene usare l'equals con l'ultimo dei secondi? */
+        List<Course> usualSideCourses = findUsualSideCourses(menuText);
+        return Stream.of(findDailySideCourses(dailyCourses, usualSideCourses.isEmpty()), usualSideCourses)
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
-    }
-
-    private List<Course> findDailySideCourses(List<Course> dailyCoursesList) {
-        return Collections.singletonList(dailyCoursesList.get(dailyCoursesList.size() - 1));
     }
 
     private List<Course> findUsualSideCourses(String menu) {
@@ -265,6 +235,13 @@ public class MenuParser {
             return Collections.singletonList(Course.fromUsualCourse(UsualCourseData.INSALATA_MISTA));
         }
         return Collections.emptyList();
+    }
+
+    private List<Course> findDailySideCourses(List<Course> dailyCoursesList, boolean notUsual) {
+        if (notUsual)
+            return dailyCoursesList.subList(dailyCoursesList.size() - 2, dailyCoursesList.size());
+        else
+            return Collections.singletonList(dailyCoursesList.get(dailyCoursesList.size() - 1));
     }
 
     private Course findUsualFruitCourse(String menu) {

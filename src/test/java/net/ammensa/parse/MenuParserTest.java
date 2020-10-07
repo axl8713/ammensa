@@ -61,7 +61,7 @@ class MenuParserTest {
     public void parseMenuWithMalformedDailyCourseTest() throws Exception {
 
         String menuText = new PdfConversion()
-                .toText(Files.readAllBytes(new ClassPathResource("menu/GIOVEDI' 07 MARZO  2019 PRANZO.pdf")
+                .toText(Files.readAllBytes(new ClassPathResource("menu/GIOVEDI' 10 SETTEMBRE 2020 PRANZO.pdf")
                         .getFile().toPath()));
 
         menuText = menuText.replaceFirst("Pasta.+", "(");
