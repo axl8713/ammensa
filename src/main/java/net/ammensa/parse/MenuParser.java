@@ -148,7 +148,7 @@ public class MenuParser {
     }
 
     private String[] splitDailyCoursesFromMenuText(String menu) {
-        return menu.split("[).]\\s{2,}(?=\\w|\\*)");
+        return menu.split("[).\\w]\\s{2,}(?=[A-Z]|\\*)");
     }
 
     private Course parseDailyCourse(String courseString) {
