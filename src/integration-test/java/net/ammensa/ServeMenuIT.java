@@ -48,7 +48,10 @@ public class ServeMenuIT {
 
     @BeforeEach
     private void initWebTestClient() {
-        webTestClient = WebTestClient.bindToApplicationContext(applicationContext).build();
+        webTestClient = WebTestClient.bindToApplicationContext(applicationContext)
+                .configureClient()
+                .responseTimeout(Duration.ofSeconds(20))
+                .build();
     }
 
     @BeforeEach
