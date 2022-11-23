@@ -14,14 +14,27 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-import java.time.*;
+import java.time.Clock;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.Month;
+import java.time.MonthDay;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
+import static net.ammensa.entity.MenuStatus.ERROR;
+import static net.ammensa.entity.MenuStatus.MENSA_CLOSED;
+import static net.ammensa.entity.MenuStatus.NOT_AVAILABLE;
+import static net.ammensa.entity.MenuStatus.OK;
+import static net.ammensa.entity.MenuStatus.STILL_NOT_AVAILABLE;
+import static net.ammensa.entity.MenuStatus.STILL_TOO_EARLY;
+import static net.ammensa.entity.MenuStatus.TOO_EARLY;
 import static org.springframework.web.reactive.function.BodyInserters.fromValue;
 
 @Component
@@ -30,7 +43,7 @@ public class MenuHandler {
     private static final Logger LOGGER = Logger.getLogger(MenuHandler.class.getName());
     private static final MonthDay SAN_MATTEO = MonthDay.of(Month.SEPTEMBER, 21);
     private static final List<String> IT_HOLIDAYS_REGION = Collections.singletonList("it");
-    private static Clock ITALY_CLOCK = Clock.system(ZoneId.of("Europe/Rome"));
+    private static Clock italyClock = Clock.system(ZoneId.of("Europe/Rome"));
 
     @Autowired
     private MenuUpdate menuUpdate;
@@ -41,91 +54,75 @@ public class MenuHandler {
     public Mono<ServerResponse> serveMenu(ServerRequest request) {
         try {
 
-            ZonedDateTime now = ZonedDateTime.now(ITALY_CLOCK);
-
-            LOGGER.fine("the time right now is " + now);
+            ZonedDateTime now = ZonedDateTime.now(italyClock);
+            LOGGER.fine(() -> String.format("the time right now is %s", now));
 
             if (isMensaClosed(now)) {
-                return handleMessageResponse(request, MenuStatus.MENSA_CLOSED);
+                return messageResponse(request, MENSA_CLOSED);
             }
 
-            int hour = now.getHour();
-
-            return Mono.fromCallable(menuRepository::retrieve)
-                    .flatMap(optionalMenu -> optionalMenu
-                            .map(menu -> {
-
-                                LocalDate menuDate = menu.getDate();
-
-                                if (!menuDate.isEqual(now.toLocalDate())) {
-
-                                    LOGGER.info("old menu in repository");
-
-                                    menuRepository.delete();
-
-                                    return handleNotAvailableResponse(request, hour);
-                                }
-
-                                return handleMenuResponse(request, menu);
-                            })
-                            .orElseGet(() -> {
-                                LOGGER.info("no menu in repository");
-                                return handleNotAvailableResponse(request, hour);
-                            }));
-        } catch (Exception ex) {
-            return handleMessageResponse(request, MenuStatus.ERROR);
-        }
-    }
-
-    private boolean isMensaClosed(ZonedDateTime now) {
-        try {
-            DayOfWeek todaysDayOfWeek = now.getDayOfWeek();
-            List<Holiday> todaysHolidays = new Holidays(IT_HOLIDAYS_REGION).on(Date.from(now.toInstant()), IT_HOLIDAYS_REGION, Holidays.NO_OPTION);
-
-            return todaysDayOfWeek.equals(DayOfWeek.SATURDAY) || todaysDayOfWeek.equals(DayOfWeek.SUNDAY)
-                    || !todaysHolidays.isEmpty()
-                    || SAN_MATTEO.equals(MonthDay.of(now.getMonth(), now.getDayOfMonth()));
+            return Mono.justOrEmpty(menuRepository.retrieve())
+                    .flatMap(menu -> handleRetrievedMenu(now, menu))
+                    .flatMap(menu -> menuResponse(request, menu))
+                    .switchIfEmpty(menuNotAvailableResponse(request, now.getHour()));
 
         } catch (Exception ex) {
-            LOGGER.severe("error checking mensa closing");
-            throw new RuntimeException(ex);
+            return messageResponse(request, ERROR);
         }
     }
 
-    private Mono<ServerResponse> handleNotAvailableResponse(ServerRequest request, int hour) {
-        if (hour < 9) {
-            return handleMessageResponse(request, MenuStatus.TOO_EARLY);
-        } else if (hour < 10) {
-            return handleMessageResponse(request, MenuStatus.TOO_EARLY_ANYWAY);
-        } else if (hour > 12) {
-            return handleMessageResponse(request, MenuStatus.STILL_NOT_AVAILABLE);
-        } else {
-            return handleMessageResponse(request, MenuStatus.NOT_AVAILABLE);
+    private boolean isMensaClosed(ZonedDateTime now) throws Exception {
+        DayOfWeek todaysDayOfWeek = now.getDayOfWeek();
+        List<Holiday> todaysHolidays = new Holidays(IT_HOLIDAYS_REGION).on(Date.from(now.toInstant()), IT_HOLIDAYS_REGION, Holidays.NO_OPTION);
+
+        return todaysDayOfWeek.equals(DayOfWeek.SATURDAY) || todaysDayOfWeek.equals(DayOfWeek.SUNDAY)
+                || !todaysHolidays.isEmpty()
+                || SAN_MATTEO.equals(MonthDay.of(now.getMonth(), now.getDayOfMonth()));
+    }
+
+    private Mono<Menu> handleRetrievedMenu(ZonedDateTime now, Menu menu) {
+        if (!menu.getDate().isEqual(now.toLocalDate())) {
+            LOGGER.info("old menu in repository");
+            menuRepository.delete();
+            return Mono.empty();
         }
+        return Mono.just(menu);
     }
 
-    private Mono<ServerResponse> handleMessageResponse(ServerRequest request, MenuStatus menuStatus) {
-        return new ResponseBuilder(request.headers().accept(), menuStatus)
-                .withMenuStatus(menuStatus)
-                .build();
-    }
-
-    private Mono<ServerResponse> handleMenuResponse(ServerRequest request, Menu menu) {
+    private Mono<ServerResponse> menuResponse(ServerRequest request, Menu menu) {
 
         List<MediaType> requestAcceptHeader = request.headers().accept();
 
-        ResponseBuilder responseBuilder = new ResponseBuilder(requestAcceptHeader, MenuStatus.OK)
+        ResponseBuilder responseBuilder = new ResponseBuilder(requestAcceptHeader, OK)
                 .withMenu(menu);
 
         if (requestAcceptHeader.contains(MediaType.TEXT_HTML)) {
-            ZonedDateTime tomorrowMidnight = LocalDate.now(ITALY_CLOCK.getZone()).atStartOfDay(ITALY_CLOCK.getZone()).plusDays(1);
+            ZonedDateTime tomorrowMidnight = LocalDate.now(italyClock.getZone()).atStartOfDay(italyClock.getZone()).plusDays(1);
             responseBuilder.withExpires(tomorrowMidnight);
         }
 
         return responseBuilder.build();
     }
 
-    public Mono<ServerResponse> manualMenuUpdate(ServerRequest request) {
+    private Mono<ServerResponse> menuNotAvailableResponse(ServerRequest request, int hour) {
+        if (hour < 9) {
+            return messageResponse(request, TOO_EARLY);
+        } else if (hour < 10) {
+            return messageResponse(request, STILL_TOO_EARLY);
+        } else if (hour > 12) {
+            return messageResponse(request, STILL_NOT_AVAILABLE);
+        } else {
+            return messageResponse(request, NOT_AVAILABLE);
+        }
+    }
+
+    private Mono<ServerResponse> messageResponse(ServerRequest request, MenuStatus menuStatus) {
+        return new ResponseBuilder(request.headers().accept(), menuStatus)
+                .withMenuStatus(menuStatus)
+                .build();
+    }
+
+    public Mono<ServerResponse> manualMenuUpdate() {
         return retrieveMenu()
                 .flatMap(m -> ServerResponse.ok().body(fromValue(m)))
                 .switchIfEmpty(ServerResponse.notFound().build());
@@ -182,22 +179,17 @@ public class MenuHandler {
             }
 
             if (contentType == MediaType.APPLICATION_JSON) {
-
-                Object body;
-                if (menuStatus != MenuStatus.OK) {
-                    body = Collections.singletonMap("info", Collections.singletonMap("status", menuStatus));
-                } else {
-                    body = menu;
-                }
-                return response.body(fromValue(body));
-
+                return response.body(fromValue(composeResponseBody()));
             } else {
-                return response.render(templateName, new HashMap<>() {
-                    {
-                        put("status", menuStatus);
-                        put("menu", menu);
-                    }
-                });
+                return response.render(templateName, Map.of("status", menuStatus, "menu", menu));
+            }
+        }
+
+        private Object composeResponseBody() {
+            if (menuStatus != OK) {
+                return Collections.singletonMap("info", Collections.singletonMap("status", menuStatus));
+            } else {
+                return menu;
             }
         }
     }

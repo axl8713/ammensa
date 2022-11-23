@@ -13,14 +13,17 @@ public enum MenuStatus {
     NOT_AVAILABLE(2, "Il menu non è ancora disponibile. Fame? :)"),
     STILL_NOT_AVAILABLE(2, "Il menu non è disponibile oggi... Pranzo a sorpresa :p"),
     TOO_EARLY(2, "Già pensi al pranzo?"),
-    TOO_EARLY_ANYWAY(2, "È ancora presto per andare a mensa. Non ti distrarre.");
+    STILL_TOO_EARLY(2, "È ancora presto per andare a mensa. Non ti distrarre.");
 
-    public int code;
-    public String message;
+    private int code;
+    private String message;
 
     MenuStatus(int code, String message) {
         this.code = code;
         this.message = message;
     }
 
+    public String getMessage() {
+        return message;
+    }
 }

@@ -17,6 +17,6 @@ public class RoutingConfiguration {
     public RouterFunction<ServerResponse> menuRouterFunction(MenuHandler menuHandler) {
         return RouterFunctions
                 .route(GET("/"), menuHandler::serveMenu)
-                .andRoute(path("/update"), menuHandler::manualMenuUpdate);
+                .andRoute(path("/update"), request -> menuHandler.manualMenuUpdate());
     }
 }

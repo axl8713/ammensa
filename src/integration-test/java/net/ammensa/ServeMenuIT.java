@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @MockBean(ApplicationStartMenuUpdater.class)
-public class ServeMenuIT {
+class ServeMenuIT {
 
     private static final ZoneId ROME_ZONE_ID = ZoneId.of("Europe/Rome");
 
@@ -66,7 +66,7 @@ public class ServeMenuIT {
     }
 
     @Test
-    public void xmlMenu() {
+    void xmlMenu() {
 
         /* TODO:
             - usare un webserver di test
@@ -86,7 +86,7 @@ public class ServeMenuIT {
     }
 
     @Test
-    public void htmlMenu() {
+    void htmlMenu() {
 
        /* TODO:
             - usare un webserver di test
@@ -105,7 +105,7 @@ public class ServeMenuIT {
     }
 
     @Test
-    public void oldMenuBeforeNoon() {
+    void oldMenuBeforeNoon() {
 
         /* TODO:
             - usare un webserver di test
@@ -119,14 +119,14 @@ public class ServeMenuIT {
                     .exchange()
                     .expectStatus().isOk()
                     .expectBody()
-                    .xpath("//div[@id='status']/h2[@id='message']").isEqualTo(MenuStatus.NOT_AVAILABLE.message);
+                    .xpath("//div[@id='status']/h2[@id='message']").isEqualTo(MenuStatus.NOT_AVAILABLE.getMessage());
 
             assertTrue(menuRepository.retrieve().isEmpty());
         });
     }
 
     @Test
-    public void oldMenuAfterNoon() {
+    void oldMenuAfterNoon() {
 
         /* TODO:
             - usare un webserver di test
@@ -140,14 +140,14 @@ public class ServeMenuIT {
                     .exchange()
                     .expectStatus().isOk()
                     .expectBody()
-                    .xpath("//div[@id='status']/h2[@id='message']").isEqualTo(MenuStatus.STILL_NOT_AVAILABLE.message);
+                    .xpath("//div[@id='status']/h2[@id='message']").isEqualTo(MenuStatus.STILL_NOT_AVAILABLE.getMessage());
 
             assertTrue(menuRepository.retrieve().isEmpty());
         });
     }
 
     @Test
-    public void noMenuBeforeNoon() {
+    void noMenuBeforeNoon() {
 
         Clock fixed = Clock.fixed(LocalDateTime.parse("2019-02-22T11:59:00").atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
         ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
@@ -157,11 +157,11 @@ public class ServeMenuIT {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .xpath("//div[@id='status']/h2[@id='message']").isEqualTo(MenuStatus.NOT_AVAILABLE.message);
+                .xpath("//div[@id='status']/h2[@id='message']").isEqualTo(MenuStatus.NOT_AVAILABLE.getMessage());
     }
 
     @Test
-    public void noMenuAfterNoon() {
+    void noMenuAfterNoon() {
 
         Clock fixed = Clock.fixed(LocalDateTime.parse("2019-02-22T13:00:00").atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
         ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
@@ -171,11 +171,11 @@ public class ServeMenuIT {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .xpath("//div[@id='status']/h2[@id='message']").isEqualTo(MenuStatus.STILL_NOT_AVAILABLE.message);
+                .xpath("//div[@id='status']/h2[@id='message']").isEqualTo(MenuStatus.STILL_NOT_AVAILABLE.getMessage());
     }
 
     @Test
-    public void saturdayMenuTest() {
+    void saturdayMenuTest() {
 
         LocalDate saturday = Year.of(2000).atMonthDay(MonthDay.of(Month.SEPTEMBER, 1)).with(TemporalAdjusters.nextOrSame(DayOfWeek.SATURDAY));
         Clock fixed = Clock.fixed(saturday.atStartOfDay().atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
@@ -186,11 +186,11 @@ public class ServeMenuIT {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .xpath("//div[@id='status']/h2[@id='message']").isEqualTo(MenuStatus.MENSA_CLOSED.message);
+                .xpath("//div[@id='status']/h2[@id='message']").isEqualTo(MenuStatus.MENSA_CLOSED.getMessage());
     }
 
     @Test
-    public void sundayMenuTest() {
+    void sundayMenuTest() {
 
         LocalDate sunday = Year.of(2012).atMonthDay(MonthDay.of(Month.JULY, 1)).with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
         Clock fixed = Clock.fixed(sunday.atStartOfDay().atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
@@ -201,12 +201,12 @@ public class ServeMenuIT {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .xpath("//div[@id='status']/h2[@id='message']").isEqualTo(MenuStatus.MENSA_CLOSED.message);
+                .xpath("//div[@id='status']/h2[@id='message']").isEqualTo(MenuStatus.MENSA_CLOSED.getMessage());
     }
 
 
     @Test
-    public void christmasMenuTest() {
+    void christmasMenuTest() {
 
         Clock fixed = Clock.fixed(LocalDateTime.parse("2013-12-25T20:20:20").atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
         ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
@@ -216,11 +216,11 @@ public class ServeMenuIT {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .xpath("//div[@id='status']/h2[@id='message']").isEqualTo(MenuStatus.MENSA_CLOSED.message);
+                .xpath("//div[@id='status']/h2[@id='message']").isEqualTo(MenuStatus.MENSA_CLOSED.getMessage());
     }
 
     @Test
-    public void easterMenuTest() {
+    void easterMenuTest() {
 
         Clock fixed = Clock.fixed(LocalDate.parse("1994-04-03").atStartOfDay().atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
         ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
@@ -230,11 +230,11 @@ public class ServeMenuIT {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .xpath("//div[@id='status']/h2[@id='message']").isEqualTo(MenuStatus.MENSA_CLOSED.message);
+                .xpath("//div[@id='status']/h2[@id='message']").isEqualTo(MenuStatus.MENSA_CLOSED.getMessage());
     }
 
     @Test
-    public void liberationDayMenuTest() {
+    void liberationDayMenuTest() {
 
         Clock fixed = Clock.fixed(LocalDate.parse("2000-04-25").atStartOfDay().atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
         ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
@@ -244,11 +244,11 @@ public class ServeMenuIT {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .xpath("//div[@id='status']/h2[@id='message']").isEqualTo(MenuStatus.MENSA_CLOSED.message);
+                .xpath("//div[@id='status']/h2[@id='message']").isEqualTo(MenuStatus.MENSA_CLOSED.getMessage());
     }
 
     @Test
-    public void sanMatteoMenuTest() {
+    void sanMatteoMenuTest() {
 
         Clock fixed = Clock.fixed(LocalDate.parse("2018-09-21").atStartOfDay().atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
         ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
@@ -258,6 +258,6 @@ public class ServeMenuIT {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .xpath("//div[@id='status']/h2[@id='message']").isEqualTo(MenuStatus.MENSA_CLOSED.message);
+                .xpath("//div[@id='status']/h2[@id='message']").isEqualTo(MenuStatus.MENSA_CLOSED.getMessage());
     }
 }
