@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @MockBean(ApplicationStartMenuUpdater.class)
-public class ParseMenuIT {
+ class ParseMenuIT {
 
     private static final ZoneId ROME_ZONE_ID = ZoneId.of("Europe/Rome");
 
@@ -42,7 +42,7 @@ public class ParseMenuIT {
     MenuScraper menuScraperMock;
 
     @Test
-    public void findAndParseMenu() throws Exception {
+     void findAndParseMenu() throws Exception {
 
         /* TODO:
             - usare un webserver di test
@@ -53,8 +53,8 @@ public class ParseMenuIT {
         ReflectionTestUtils.setField(menuUpdate, "httpDownload", httpDownloadMock);
 
         Clock fixed = Clock.fixed(LocalDateTime.parse("2019-02-20T12:12:12").atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
-        ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
-        ReflectionTestUtils.setField(menuUpdate, "ITALY_CLOCK", fixed);
+        ReflectionTestUtils.setField(MenuHandler.class, "italyClock", fixed);
+        ReflectionTestUtils.setField(menuUpdate, "italyClock", fixed);
 
         Mockito.when(menuScraperMock.scrapePdfMenuUrl()).thenReturn("pdfmenuurl");
         ReflectionTestUtils.setField(menuUpdate, "menuScraper", menuScraperMock);

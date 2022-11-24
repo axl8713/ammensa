@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 public class MenuUpdate {
 
     private static final Logger LOGGER = Logger.getLogger(MenuUpdate.class.getName());
-    private static Clock ITALY_CLOCK = Clock.system(ZoneId.of("Europe/Rome"));
+    private static Clock italyClock = Clock.system(ZoneId.of("Europe/Rome"));
 
     @Autowired
     private MenuScraper menuScraper;

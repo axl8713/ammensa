@@ -32,7 +32,7 @@ class MenuUpdateTest {
 
         MenuUpdate menuUpdate = new MenuUpdate();
 
-        ReflectionTestUtils.setField(menuUpdate, "ITALY_CLOCK", menu_clock);
+        ReflectionTestUtils.setField(menuUpdate, "italyClock", menu_clock);
 
         HttpDownload httpDownloadMock = Mockito.when(
                 Mockito.mock(HttpDownload.class).download(Mockito.any())).thenReturn(Mono.just("".getBytes()))
@@ -55,7 +55,7 @@ class MenuUpdateTest {
     }
 
     @Test
-    public void updateMenuWhenThereIsOldMenu() throws Exception {
+     void updateMenuWhenThereIsOldMenu() throws Exception {
 
         final Instant menu_instant = Instant.parse("2020-02-29T08:51:00Z");
         final Clock menu_clock = Clock.fixed(menu_instant, ROME_ZONE_ID);
@@ -68,7 +68,7 @@ class MenuUpdateTest {
 
         MenuUpdate menuUpdate = new MenuUpdate();
 
-        ReflectionTestUtils.setField(menuUpdate, "ITALY_CLOCK", menu_clock);
+        ReflectionTestUtils.setField(menuUpdate, "italyClock", menu_clock);
 
         MenuRepository menuRepositoryMock = Mockito.when(
                 Mockito.mock(MenuRepository.class).retrieve()).thenReturn(Optional.of(yesterday_menu_stub))
@@ -99,7 +99,7 @@ class MenuUpdateTest {
     }
 
     @Test
-    public void updateMenuWhenThereIsAlreadyTodayMenu() {
+     void updateMenuWhenThereIsAlreadyTodayMenu() {
 
         final Instant menu_instant = Instant.parse("2019-02-20T10:00:00Z");
         final Clock menu_clock = Clock.fixed(menu_instant, ROME_ZONE_ID);
@@ -109,7 +109,7 @@ class MenuUpdateTest {
 
         MenuUpdate menuUpdate = new MenuUpdate();
 
-        ReflectionTestUtils.setField(menuUpdate, "ITALY_CLOCK", menu_clock);
+        ReflectionTestUtils.setField(menuUpdate, "italyClock", menu_clock);
 
         MenuRepository menuRepositoryMock = Mockito.when(
                 Mockito.mock(MenuRepository.class).retrieve()).thenReturn(Optional.of(today_menu_stub))

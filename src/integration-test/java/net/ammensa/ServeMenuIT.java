@@ -47,7 +47,7 @@ class ServeMenuIT {
     private WebTestClient webTestClient;
 
     @BeforeEach
-    private void initWebTestClient() {
+    public void initWebTestClient() {
         webTestClient = WebTestClient.bindToApplicationContext(applicationContext)
                 .configureClient()
                 .responseTimeout(Duration.ofSeconds(20))
@@ -72,17 +72,16 @@ class ServeMenuIT {
             - usare un webserver di test
         */
         Clock fixed = Clock.fixed(LocalDateTime.parse("2019-02-20T12:12:12").atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
-        ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
-        ReflectionTestUtils.setField(menuUpdate, "ITALY_CLOCK", fixed);
+        ReflectionTestUtils.setField(MenuHandler.class, "italyClock", fixed);
+        ReflectionTestUtils.setField(menuUpdate, "italyClock", fixed);
 
-        menuUpdate.updateMenu().subscribe(a -> {
-            webTestClient
-                    .get().uri("/")
-                    .accept(MediaType.APPLICATION_XML)
-                    .exchange()
-                    .expectStatus().isOk()
-                    .expectBody().xpath("//menu/firstCourses").exists();
-        });
+        menuUpdate.updateMenu().subscribe(a ->
+                webTestClient
+                        .get().uri("/")
+                        .accept(MediaType.APPLICATION_XML)
+                        .exchange()
+                        .expectStatus().isOk()
+                        .expectBody().xpath("//menu/firstCourses").exists());
     }
 
     @Test
@@ -92,16 +91,15 @@ class ServeMenuIT {
             - usare un webserver di test
         */
         Clock fixed = Clock.fixed(LocalDateTime.parse("2019-02-20T22:22:22").atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
-        ReflectionTestUtils.setField(menuUpdate, "ITALY_CLOCK", fixed);
-        ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
+        ReflectionTestUtils.setField(menuUpdate, "italyClock", fixed);
+        ReflectionTestUtils.setField(MenuHandler.class, "italyClock", fixed);
 
-        menuUpdate.updateMenu().subscribe((a) -> {
-            webTestClient
-                    .get().uri("/")
-                    .exchange()
-                    .expectStatus().isOk()
-                    .expectBody().xpath("/html//div[@id='menu']/h2[1]").isEqualTo("Primi");
-        });
+        menuUpdate.updateMenu().subscribe(a ->
+                webTestClient
+                        .get().uri("/")
+                        .exchange()
+                        .expectStatus().isOk()
+                        .expectBody().xpath("/html//div[@id='menu']/h2[1]").isEqualTo("Primi"));
     }
 
     @Test
@@ -111,7 +109,7 @@ class ServeMenuIT {
             - usare un webserver di test
         */
         Clock fixed = Clock.fixed(LocalDateTime.parse("2019-02-22T11:59:00").atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
-        ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
+        ReflectionTestUtils.setField(MenuHandler.class, "italyClock", fixed);
 
         menuUpdate.updateMenu().subscribe((a) -> {
             webTestClient
@@ -132,7 +130,7 @@ class ServeMenuIT {
             - usare un webserver di test
         */
         Clock fixed = Clock.fixed(Instant.parse("2019-02-22T13:00:00Z"), ROME_ZONE_ID);
-        ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
+        ReflectionTestUtils.setField(MenuHandler.class, "italyClock", fixed);
 
         menuUpdate.updateMenu().subscribe((a) -> {
             webTestClient
@@ -150,7 +148,7 @@ class ServeMenuIT {
     void noMenuBeforeNoon() {
 
         Clock fixed = Clock.fixed(LocalDateTime.parse("2019-02-22T11:59:00").atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
-        ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
+        ReflectionTestUtils.setField(MenuHandler.class, "italyClock", fixed);
 
         webTestClient
                 .get().uri("/")
@@ -164,7 +162,7 @@ class ServeMenuIT {
     void noMenuAfterNoon() {
 
         Clock fixed = Clock.fixed(LocalDateTime.parse("2019-02-22T13:00:00").atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
-        ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
+        ReflectionTestUtils.setField(MenuHandler.class, "italyClock", fixed);
 
         webTestClient
                 .get().uri("/")
@@ -179,7 +177,7 @@ class ServeMenuIT {
 
         LocalDate saturday = Year.of(2000).atMonthDay(MonthDay.of(Month.SEPTEMBER, 1)).with(TemporalAdjusters.nextOrSame(DayOfWeek.SATURDAY));
         Clock fixed = Clock.fixed(saturday.atStartOfDay().atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
-        ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
+        ReflectionTestUtils.setField(MenuHandler.class, "italyClock", fixed);
 
         webTestClient
                 .get().uri("/")
@@ -194,7 +192,7 @@ class ServeMenuIT {
 
         LocalDate sunday = Year.of(2012).atMonthDay(MonthDay.of(Month.JULY, 1)).with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
         Clock fixed = Clock.fixed(sunday.atStartOfDay().atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
-        ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
+        ReflectionTestUtils.setField(MenuHandler.class, "italyClock", fixed);
 
         webTestClient
                 .get().uri("/")
@@ -209,7 +207,7 @@ class ServeMenuIT {
     void christmasMenuTest() {
 
         Clock fixed = Clock.fixed(LocalDateTime.parse("2013-12-25T20:20:20").atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
-        ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
+        ReflectionTestUtils.setField(MenuHandler.class, "italyClock", fixed);
 
         webTestClient
                 .get().uri("/")
@@ -223,7 +221,7 @@ class ServeMenuIT {
     void easterMenuTest() {
 
         Clock fixed = Clock.fixed(LocalDate.parse("1994-04-03").atStartOfDay().atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
-        ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
+        ReflectionTestUtils.setField(MenuHandler.class, "italyClock", fixed);
 
         webTestClient
                 .get().uri("/")
@@ -237,7 +235,7 @@ class ServeMenuIT {
     void liberationDayMenuTest() {
 
         Clock fixed = Clock.fixed(LocalDate.parse("2000-04-25").atStartOfDay().atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
-        ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
+        ReflectionTestUtils.setField(MenuHandler.class, "italyClock", fixed);
 
         webTestClient
                 .get().uri("/")
@@ -251,7 +249,7 @@ class ServeMenuIT {
     void sanMatteoMenuTest() {
 
         Clock fixed = Clock.fixed(LocalDate.parse("2018-09-21").atStartOfDay().atZone(ROME_ZONE_ID).toInstant(), ROME_ZONE_ID);
-        ReflectionTestUtils.setField(MenuHandler.class, "ITALY_CLOCK", fixed);
+        ReflectionTestUtils.setField(MenuHandler.class, "italyClock", fixed);
 
         webTestClient
                 .get().uri("/")
