@@ -36,7 +36,7 @@ public class MenuUpdate {
     @Scheduled(cron = "0 */10 10-12 * * 1-5", zone = "Europe/Rome")
     public void refreshMenu() {
         LOGGER.info("starting cron refresh");
-        updateMenu().subscribe((a) -> LOGGER.info("cron refresh complete"));
+        updateMenu().subscribe(a -> LOGGER.info("cron refresh complete"));
     }
 
     public Mono<Menu> updateMenu() {
@@ -84,9 +84,9 @@ public class MenuUpdate {
 
     private boolean isTodayMenu(Menu menu) {
 
-        ZonedDateTime today = ZonedDateTime.now(ITALY_CLOCK);
+        ZonedDateTime today = ZonedDateTime.now(italyClock);
 
-        LOGGER.fine("the time right now is " + today);
+        LOGGER.fine(() -> String.format("the time right now is %s", today));
 
         return menu.getDate().isEqual(today.toLocalDate());
     }

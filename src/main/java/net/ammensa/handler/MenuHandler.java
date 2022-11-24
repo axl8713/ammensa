@@ -50,7 +50,6 @@ public class MenuHandler {
     @Autowired
     private MenuRepository menuRepository;
 
-
     public Mono<ServerResponse> serveMenu(ServerRequest request) {
         try {
 
@@ -64,8 +63,9 @@ public class MenuHandler {
             return Mono.justOrEmpty(menuRepository.retrieve())
                     .flatMap(menu -> handleRetrievedMenu(now, menu))
                     .flatMap(menu -> menuResponse(request, menu))
-                    .switchIfEmpty(menuNotAvailableResponse(request, now.getHour()));
-
+                    .switchIfEmpty(Mono.defer(() ->
+                            menuNotAvailableResponse(request, now.getHour()))
+                    );
         } catch (Exception ex) {
             return messageResponse(request, ERROR);
         }
