@@ -24,8 +24,8 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 
 import static net.ammensa.entity.MenuStatus.ERROR;
@@ -67,6 +67,7 @@ public class MenuHandler {
                             menuNotAvailableResponse(request, now.getHour()))
                     );
         } catch (Exception ex) {
+            LOGGER.severe(ex.getMessage());
             return messageResponse(request, ERROR);
         }
     }
@@ -128,6 +129,15 @@ public class MenuHandler {
                 .switchIfEmpty(ServerResponse.notFound().build());
     }
 
+    private Mono<Menu> retrieveMenu() {
+        LOGGER.info("retrieve");
+        return Mono
+                .when(menuUpdate.updateMenu())
+                .then(Mono.fromCallable(menuRepository::retrieve)
+                        /* https://stackoverflow.com/a/53188485/1291616 */
+                        .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty)));
+    }
+
     private static final class ResponseBuilder {
 
         private MediaType contentType;
@@ -181,7 +191,10 @@ public class MenuHandler {
             if (contentType == MediaType.APPLICATION_JSON) {
                 return response.body(fromValue(composeResponseBody()));
             } else {
-                return response.render(templateName, Map.of("status", menuStatus, "menu", menu));
+                HashMap<String, Object> templateValues = new HashMap<>();
+                templateValues.put("status", menuStatus);
+                templateValues.put("menu", menu);
+                return response.render(templateName, templateValues);
             }
         }
 
@@ -192,14 +205,5 @@ public class MenuHandler {
                 return menu;
             }
         }
-    }
-
-    private Mono<Menu> retrieveMenu() {
-        LOGGER.info("retrieve");
-        return Mono
-                .when(menuUpdate.updateMenu())
-                .then(Mono.fromCallable(menuRepository::retrieve)
-                        /* https://stackoverflow.com/a/53188485/1291616 */
-                        .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty)));
     }
 }
