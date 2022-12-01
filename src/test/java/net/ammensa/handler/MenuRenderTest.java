@@ -8,8 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
-import org.thymeleaf.extras.java8time.dialect.Java8TimeDialect;
-import org.thymeleaf.spring5.SpringTemplateEngine;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
 import java.nio.file.Files;
@@ -33,14 +32,13 @@ class MenuRenderTest {
 
         templateEngine.setTemplateResolver(templateResolver);
 
-        templateEngine.addDialect(new Java8TimeDialect());
         templateEngine.setEnableSpringELCompiler(true);
 
         return templateEngine;
     }
 
     @Test
-    public void menuDateRenderTest() throws Exception {
+    void menuDateRenderTest() throws Exception {
 
         String menuText = new PdfConversion()
                 .toText(Files.readAllBytes(new ClassPathResource("menu/VENERDI' 01 MARZO 2019 PRANZO.pdf")
