@@ -10,7 +10,7 @@ To me as a student, this was just a clear waste of time and disk space.
 AMMensa checks every morning for the cafeteria PDF menu, downloads it, parses it, and finally makes it accessible
 through a Web page.
 
-Currently, the project is hosted on Heroku: https://ammensa.herokuapp.com/
+The project is hosted on Render: https://ammensa.onrender.com/
 
 ### Built with
 
