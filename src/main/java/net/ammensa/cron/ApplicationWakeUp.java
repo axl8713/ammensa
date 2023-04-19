@@ -18,9 +18,9 @@ public class ApplicationWakeUp {
     @Value("${server.port}")
     private int serverPort;
 
-    @Scheduled(cron = "0 */10 * * * *")
+    @Scheduled(cron = "0 */2 * * * *")
     public void wakeUpApplication() {
         LOGGER.info("starting wake-up");
-        httpDownload.download("localhost:" + serverPort).subscribe((a) -> LOGGER.info("wake-up complete"));
+        httpDownload.download("http://localhost:" + serverPort).subscribe(a -> LOGGER.info("wake-up complete"));
     }
 }
