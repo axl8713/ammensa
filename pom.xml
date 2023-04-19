@@ -5,6 +5,7 @@
     <artifactId>ammensa</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>AMMensa</name>
+    <packaging>jar</packaging>
 
     <repositories>
         <repository>
