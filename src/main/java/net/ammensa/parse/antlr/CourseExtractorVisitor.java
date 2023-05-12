@@ -26,11 +26,11 @@ public class CourseExtractorVisitor extends net.ammensa.parse.antlr.CourseGramma
 
         extractedCourse.setName(ctx.name.getText().trim());
 
-        final List<IngredientsContext> ctxs = ctx.ingredients();
+        final List<IngredientsContext> ingredientsContexts = ctx.ingredients();
 
-        for (int i = 0; i < ctxs.size(); i++) {
-            if (visit(ctxs.get(i)) != null) {
-                extractedCourse.addIngredients(visit(ctxs.get(i)).trim());
+        for (IngredientsContext ingredientsContext : ingredientsContexts) {
+            if (visit(ingredientsContext) != null) {
+                extractedCourse.addIngredients(visit(ingredientsContext).trim());
             }
         }
         return null;
@@ -39,12 +39,12 @@ public class CourseExtractorVisitor extends net.ammensa.parse.antlr.CourseGramma
     @Override
     public String visitIngredients(net.ammensa.parse.antlr.CourseGrammarParser.IngredientsContext ctx) {
 
-        String text = new String();
-        final List<IngredientsContext> ctxs = ctx.ingredients();
+        String text = "";
+        final List<IngredientsContext> ingredientsContexts = ctx.ingredients();
 
-        if (ctxs.size() != 0) {
-            for (int i = 0; i < ctxs.size(); i++) {
-                text = text.concat(visit(ctxs.get(i)));
+        if (!ingredientsContexts.isEmpty()) {
+            for (IngredientsContext ingredientsContext : ingredientsContexts) {
+                text = text.concat(visit(ingredientsContext));
             }
         } else {
             text = visit(ctx.content());

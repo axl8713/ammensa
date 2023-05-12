@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,7 +26,7 @@ public class MenuParser {
 
     private static final Logger LOGGER = Logger.getLogger(MenuParser.class.getName());
     private static final String MENU_TXT_HEADER_SAMPLE = "MENU' - PRANZO";
-    private static final String MENU_ITALIAN_DATE = "[a-zA-Z]+(?:.|Ì)\\s*\\d{1,2}\\s*[a-z]+\\s*\\d+";
+    private static final String MENU_ITALIAN_DATE = "[A-Z]+(?:.|Ì)\\s*\\d{1,2}\\s*[a-z]+\\s*\\d+";
     private static final String MENU_REGEX_HEADER_END = "(?is).*menu.*\\b(?<italianDate>" + MENU_ITALIAN_DATE + ")\\s*\\n.*\\b[a-z]+\\s*\\d{1,2}\\s*[a-z]+\\s*\\d+\\s*";
     private static final String MENU_TXT_ADISU_RECOMMENDATION_SAMPLE = "A.DI.SU.";
     private static final String MENU_REGEX_ADISU_RECOMMENDATION_END = "mediterranean diet." + "\\s+";
@@ -67,7 +68,7 @@ public class MenuParser {
 
         if (matcher.find()) {
             LocalDate menuLocalDate = parseMenuDate(matcher);
-            LOGGER.fine("Date of the menu: " + menuLocalDate);
+            LOGGER.log(Level.FINE, "Date of the menu: {}", menuLocalDate);
             return Optional.of(menuLocalDate);
         } else {
             return Optional.empty();
@@ -137,7 +138,7 @@ public class MenuParser {
 
         return Arrays.stream(splittedCourses)
                 .map(this::parseDailyCourse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private String removeUsualCoursesFromMenuText(String menuText) {
@@ -178,7 +179,7 @@ public class MenuParser {
     private List<Course> findFirstCourses(List<Course> dailyCourses, String menuText) {
         return Stream.of(findDailyFirstCourses(dailyCourses), findUsualFirstCourses(menuText))
                 .flatMap(List::stream)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private List<Course> findDailyFirstCourses(List<Course> dailyCoursesList) {
@@ -205,7 +206,7 @@ public class MenuParser {
     private List<Course> findSecondCourses(List<Course> dailyCourses, String menuText) {
         return Stream.of(findDailySecondCourses(dailyCourses), findUsualSecondCourses(menuText))
                 .flatMap(List::stream)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private List<Course> findDailySecondCourses(List<Course> dailyCoursesList) {
@@ -217,7 +218,7 @@ public class MenuParser {
         return Stream.of(UsualCourseData.MOZZARELLA, UsualCourseData.FORMAGGI_MISTI, UsualCourseData.PIATTI_FREDDI)
                 .filter(ucd -> menuContainsUsualCourse(menu, ucd))
                 .map(Course::fromUsualCourse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private List<Course> findSideCourses(List<Course> dailyCourses, String menuText) {
@@ -226,7 +227,7 @@ public class MenuParser {
         List<Course> usualSideCourses = findUsualSideCourses(menuText);
         return Stream.of(findDailySideCourses(dailyCourses, usualSideCourses.isEmpty()), usualSideCourses)
                 .flatMap(List::stream)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private List<Course> findUsualSideCourses(String menu) {

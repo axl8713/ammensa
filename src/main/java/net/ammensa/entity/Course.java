@@ -42,7 +42,7 @@ public class Course implements Serializable {
     }
 
     public void displayCourse() {
-        System.out.println(toString());
+        System.out.println(this);
     }
 
     public static Course fromUsualCourse(UsualCourseData usualCourse) {
