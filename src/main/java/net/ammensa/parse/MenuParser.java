@@ -55,7 +55,7 @@ public class MenuParser {
 
         } catch (Exception ex) {
             MenuParseException mpex = new MenuParseException(
-                    "an error occourred while parsing the menu (" + ex.getMessage() + ")");
+                    "an error occurred while parsing the menu (" + ex.getMessage() + ")");
             mpex.initCause(ex);
             throw mpex;
         }
@@ -68,7 +68,7 @@ public class MenuParser {
 
         if (matcher.find()) {
             LocalDate menuLocalDate = parseMenuDate(matcher);
-            LOGGER.log(Level.FINE, "Date of the menu: {}", menuLocalDate);
+            LOGGER.log(Level.FINE, () -> "Date of the menu: " + menuLocalDate);
             return Optional.of(menuLocalDate);
         } else {
             return Optional.empty();
