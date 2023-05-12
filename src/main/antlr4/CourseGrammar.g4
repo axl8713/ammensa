@@ -1,9 +1,6 @@
 grammar CourseGrammar;
 
-@lexer::header {
-	package net.ammensa.parse.antlr;
-}
-@parser::header {
+@header {
 	package net.ammensa.parse.antlr;
 }
 
